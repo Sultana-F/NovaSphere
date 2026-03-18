@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCA Portal - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+</head>
+<body>
+
+<div class="login-wrapper">
+    <div class="portal-logo">
+        <h1>🎓 BCA Portal</h1>
+        <p>NIMS University — Student Information System</p>
+    </div>
+
+    <div class="login-card">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert-box alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Tab Switcher -->
+        <div class="tab-switcher">
+            <button class="tab-btn active" id="tab-student" onclick="switchTab('student')">
+                🎓 Student Login
+            </button>
+            <button class="tab-btn" id="tab-admin" onclick="switchTab('admin')">
+                🔐 Admin Login
+            </button>
+        </div>
+
+        <!-- ── STUDENT LOGIN PANEL ── -->
+        <div class="form-panel active" id="panel-student">
+            <form action="/login/student" method="post">
+                <div class="mb-3">
+                    <label for="regno" class="form-label">Registration Number</label>
+                    <input type="number" class="form-control" id="regno" name="regno"
+                           placeholder="e.g. 20221234" required>
+                    <div class="hint-text">Enter your college registration number</div>
+                </div>
+                <div class="mb-3">
+                    <label for="student_password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="student_password" name="password"
+                           placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn-login btn-student">Sign In as Student</button>
+            </form>
+        </div>
+
+        <!-- ── ADMIN LOGIN PANEL ── -->
+        <div class="form-panel" id="panel-admin">
+            <form action="/login/admin" method="post">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email"
+                           placeholder="Enter your email" required>
+                    <div class="hint-text">For: Principal &nbsp;·&nbsp; HOD &nbsp;·&nbsp; TPO</div>
+                </div>
+                <div class="mb-3">
+                    <label for="admin_password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="admin_password" name="password"
+                           placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn-login btn-admin">Sign In as Admin</button>
+            </form>
+        </div>
+
+    </div><!-- /.login-card -->
+
+    <a href="{{ url_for('index') }}" class="back-link">← Back to Home</a>
+</div>
+
+<script>
+    function switchTab(tab) {
+        // Update buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+
+        // Update panels
+        document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + tab).classList.add('active');
+    }
+
+    // Re-open the correct tab if there was a validation error (persisted via query param)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'admin') switchTab('admin');
+</script>
+
+</body>
+</html>

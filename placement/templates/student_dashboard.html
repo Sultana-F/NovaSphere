@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - BCA Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+   
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom px-4">
+    <span class="navbar-brand">🎓 BCA Student Portal</span>
+    <div class="ms-auto d-flex align-items-center gap-3">
+        <span class="navbar-text">Welcome, {{ student.name }}</span>
+        <a href="/logout" class="btn btn-sm btn-dark">Logout</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="welcome-card">
+        <h4 class="fw-bold mb-1">Hello, {{ student.name }} 👋</h4>
+        <p class="mb-2" style="opacity:0.75">Here's your profile overview</p>
+        <span class="info-badge">Reg No: {{ student.regno }}</span>
+        <span class="info-badge">Dept: {{ student.department }}</span>
+        <span class="info-badge">Semester: {{ student.sem }}</span>
+    </div>
+
+</body>
+</html>
