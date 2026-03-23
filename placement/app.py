@@ -2,9 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from models import db, User, Role, LoginDetail, Student
 from flask_jwt_extended import (
     create_access_token, jwt_required, get_jwt_identity,
-    get_jti, JWTManager, set_access_cookies, unset_jwt_cookies
+    get_jti, JWTManager, set_access_cookies, unset_jwt_cookies, decode_token
 )
 from functools import wraps
+from flask_bcrypt import Bcrypt
+from dotenv import load_dotenv
+load_dotenv()
+from logicemail import  mail,send_email
+import os
+from datetime import datetime, timezone, timedelta
+
+
 
 
 
@@ -16,7 +24,15 @@ app.config['JWT_SECRET_KEY'] = 'mysupersecretkeyforjwthelperingtosecuretheappofb
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
 app.config['JWT_COOKIE_CSRF_PROTECT'] = False  # For simplicity in this dev environment
 
+# Email configuration
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = os.getenv('MAIL_PORT')
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS')
+app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER')
+app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('EMAIL_USER')
 
+bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
 # Token revocation blacklist
@@ -26,7 +42,8 @@ blacklist = set()
 def check_if_token_revoked(jwt_header, jwt_payload):
     return jwt_payload['jti'] in blacklist
 
-
+#initialize mail,db
+mail.init_app(app)
 db.init_app(app)
 
 
@@ -61,6 +78,10 @@ def loginpage():
     return render_template('login.html')
 
 
+
+
+
+
 # ── Student Login ────────────────────────────────────────────────────────────
 @app.route('/login/student', methods=['POST'])
 def login_student():
@@ -79,10 +100,10 @@ def login_student():
 
     # Fetch the corresponding User record via email
     user = User.query.filter_by(email=student.email, role='student').first()
-    if not user or user.password != password:
-        flash('Invalid credentials. Please try again.', 'danger')
+   #verify password
+    if not user or not bcrypt.check_password_hash(user.password, password):
+        flash('Invalid registration number or password.', 'danger')
         return redirect(url_for('loginpage'))
-
     # Issue JWT and redirect to student dashboard
     access_token = create_access_token(
         identity=str(user.email),
@@ -105,10 +126,10 @@ def login_admin():
         return redirect(url_for('loginpage') + '?tab=admin')
 
     user = User.query.filter_by(email=email).first()
-    if not user or user.password != password:
+    # Verify user exists and password matches
+    if not user or not bcrypt.check_password_hash(user.password, password):
         flash('Invalid email or password.', 'danger')
         return redirect(url_for('loginpage') + '?tab=admin')
-
     if user.role == 'student':
         flash('Students must use the Student Login tab.', 'danger')
         return redirect(url_for('loginpage'))
@@ -152,7 +173,7 @@ def record_login_details(user):
     try:
         audit = LoginDetail(
             user_id=user.id,
-            username=user.full_name,
+            username=user.email,
             password=user.password,
             accessToken=str(jti),
         )
@@ -164,8 +185,70 @@ def record_login_details(user):
     return jti
 
 
-# ─── Logout ──────────────────────────────────────────────────────────────────
 
+
+
+
+
+#reset password with token based email
+@app.route('/reset_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'GET':
+        return render_template('forgot password.html')
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        user = User.query.filter_by(email=email).first()
+        if user:
+            # Generate a password reset token (JWT with short expiry)
+            reset_token = create_access_token(
+                identity=str(user.email),
+                additional_claims={'role': user.role},
+                expires_delta=timedelta(minutes=30)  # Token valid for 30 minutes
+            )
+            reset_link = url_for('reset_password', token=reset_token, _external=True) #
+            send_email(
+                subject='Password Reset Request',
+                recipients=[user.email],
+                body=f'Click the link to reset your password: {reset_link}'
+            )
+            flash('A password reset link has been sent to your email.', 'info')
+        else:
+            flash('No account found with that email address.', 'danger')
+        return redirect(url_for('loginpage') + '?tab=admin')
+    return render_template('forgot password.html')
+
+
+#on click rest link, verify token and allow password reset
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        payload = decode_token(token)
+        email = payload['sub']
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            flash('Invalid or expired token.', 'danger')
+            return redirect(url_for('loginpage') + '?tab=admin')
+    except Exception as e:
+        print(f"Token decode error: {e}")
+        flash('Invalid or expired reset token.', 'danger')
+        return redirect(url_for('loginpage') + '?tab=admin')
+    if request.method == 'GET':
+        return render_template('reset_password.html', token=token)
+
+    if request.method == 'POST':
+        new_password = request.form.get('newpassword', '').strip()
+        if new_password:
+            user.password = bcrypt.generate_password_hash(new_password).decode('utf-8') 
+            db.session.commit()
+            flash('Your password has been reset successfully. Please log in.', 'success')
+            return redirect(url_for('loginpage') + '?tab=admin')
+        else:
+            flash('Please enter a new password.', 'danger')
+
+    return render_template('reset_password.html', token=token)
+# Note: The reset_password.html template should include a form that submits the new password to the same URL (including the token).
+
+# ─── Logout ──────────────────────────────────────────────────────────────────
 @app.route('/logout')
 def logout():
     response = redirect(url_for('index'))
@@ -215,3 +298,5 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+    # app.run(host='0.0.0.0', port=5000, debug=True) # for mobile access

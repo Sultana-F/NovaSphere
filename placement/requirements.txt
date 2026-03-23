@@ -1,5 +1,9 @@
-# requirements.txt for Novasphere Placement Project
-# Add your dependencies below, e.g.:
-# flask
-# sqlalchemy
-# pymysql
+flask
+flask-cors
+flask-sqlalchemy
+mysql-connector-python
+flask-jwt-extended
+flask-dotenv
+flask-mail
+flask-bcrypt
+

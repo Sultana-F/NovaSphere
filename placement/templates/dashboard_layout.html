@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-custom px-4 sticky-top">
+    <div class="container-fluid">
+        <span class="navbar-brand">{% block nav_brand %}🏛️ Dashboard{% endblock %}</span>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <span class="navbar-text">{% block user_info %}Welcome, {{ user.full_name if user and user.full_name else student.name if student else 'User' }}{% endblock %}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-sm {% block logout_btn_class %}btn-outline-light{% endblock %}">Logout</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="welcome-card">
+                <h4 class="fw-bold mb-1">{% block welcome_msg %}Hello, {{ user.full_name if user and user.full_name else student.name if student else 'User' }} 👋{% endblock %}</h4>
+                <p class="mb-2" style="opacity:0.85">{% block welcome_subtitle %}Here is your dashboard overview{% endblock %}</p>
+                {% block welcome_badges %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    {% block dashboard_content %}{% endblock %}
+</div>
+{% endblock %}
