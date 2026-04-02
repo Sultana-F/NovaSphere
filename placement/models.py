@@ -42,7 +42,7 @@ class Role(db.Model):
 class LoginDetail(db.Model):
     __tablename__ = 'login_details'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False,)
     username = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     accessToken = db.Column(db.String(300))
@@ -61,13 +61,13 @@ class LoginDetail(db.Model):
 class Student(db.Model):
     __tablename__ = 'student'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
     
     # Core Data
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(15), nullable=False)
-    regno = db.Column(db.Integer, nullable=False, unique=True)
+    regno = db.Column(db.VARCHAR(12), nullable=False, unique=True)
     department = db.Column(db.String(50), nullable=False)
     sem = db.Column(db.Integer, nullable=False)
     
@@ -82,12 +82,34 @@ class Student(db.Model):
     address = db.Column(db.Text)
     tenth_percent = db.Column(db.Float)
     twelfth_percent = db.Column(db.Float)
-    skills = db.Column(db.Text)          # Comma separated or text block
-    resume = db.Column(db.String(255))   # File path or URL
-    
+    skills = db.Column(db.Text)
+    resume = db.Column(db.String(255))
+        
     # Metadata
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Backref to User
-    user = db.relationship('User', back_populates='student_profile')
+    user = db.relationship('User', back_populates='student_profile') # Establishes a one-to-one relationship with the User model
+
+    @property
+    def profile_completion(self):
+        """Calculates percentage of profile completed based on non-null fields."""
+        fields = [
+            self.gender, self.dob, self.batch, self.cgpa, 
+            self.address, self.tenth_percent, self.twelfth_percent, 
+            self.skills, self.resume
+        ]
+        completed = len([f for f in fields if f is not None and f != ""])
+        return int((completed / len(fields)) * 100)
+
+    @property
+    def next_step(self):
+        """Suggests the next action for the student."""
+        if not self.skills:
+            return "Add your technical skills to stand out."
+        if not self.resume:
+            return "Upload your resume for applications."
+        if self.profile_completion < 100:
+            return "Complete your profile details."
+        return "Apply for your first job!"

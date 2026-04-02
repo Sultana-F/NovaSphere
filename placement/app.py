@@ -11,7 +11,7 @@ load_dotenv()
 from logicemail import  mail,send_email
 import os
 from datetime import datetime, timezone, timedelta
-
+import re
 
 
 
@@ -60,7 +60,7 @@ ROLE_DASHBOARD = {
 # ─── Routes ─────────────────────────────────────────────────────────────────
 
 @app.route('/')
-def index():
+def home():
     from flask_jwt_extended import decode_token
     token = request.cookies.get('access_token_cookie')
     user = None
@@ -76,6 +76,10 @@ def index():
 @app.route('/user')
 def loginpage():
     return render_template('login.html')
+
+@app.route('/register')
+def register():
+    return render_template('studentReg.html')
 
 
 
@@ -248,10 +252,92 @@ def reset_password(token):
     return render_template('reset_password.html', token=token)
 # Note: The reset_password.html template should include a form that submits the new password to the same URL (including the token).
 
+#student registration
+@app.route('/register/student', methods=['POST'])
+def register_student():    
+    name= request.form.get('name', '').strip()
+    email = request.form.get('email', '').strip()
+    phone=request.form.get('phone', '').strip()
+    regno=request.form.get('regno','').strip()
+    department=request.form.get('department','').strip()
+    sem=request.form.get('sem','').strip()
+    gender=request.form.get('gender','').strip()
+    dob=request.form.get('dob','').strip()
+    batch=request.form.get('batch','').strip()
+    cgpa=request.form.get('cgpa','').strip()
+    backlogs=request.form.get('backlogs','').strip()
+    address=request.form.get('address','').strip()
+    tenth_percent=request.form.get('tenth_percent','').strip()
+    twelfth_percent=request.form.get('twelfth_percent','').strip()
+    password = request.form.get('password', '').strip() # Get password from form input
+    
+    
+    #validate registration number format  using regex where U is fixed, 16 is year of admission, NB is department code, 23 is batch year, S or C is fixed and 0120 is unique number
+    regno_pattern = r'^U\d{2}NB\d{2}[SC]\d{4}$'
+    if not re.fullmatch(regno_pattern, regno):
+        flash('Invalid registration number format. Please follow the format: U16NB23S0120', 'danger')
+        return redirect(url_for('register'))
+   
+    #validate phone number format   
+    phone_pattern = r'^\d{10}$'
+    if not re.fullmatch(phone_pattern, phone):
+        flash('Invalid phone number format. Please enter a 10-digit phone number.', 'danger')
+        return redirect(url_for('register'))
+
+    try:
+        # 1. First create the User record for authentication
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered.', 'danger')
+            return redirect(url_for('register'))
+
+        new_user = User(
+            full_name=name,
+            email=email,
+            password=bcrypt.generate_password_hash(password).decode('utf-8'),
+            role='student',
+            phone=phone
+        )
+        db.session.add(new_user)
+        db.session.flush() # Flush to generate new_user.id for the foreign key
+
+        # 2. Create the Student record linked to the new user
+        new_student = Student(
+            student_id=new_user.id, # Foreign key to User
+            name=name,
+            email=email,
+            phone=phone,
+            regno=regno,
+            department=department,
+            sem=int(sem),
+            gender=gender,
+            dob=datetime.strptime(dob, '%Y-%m-%d').date() if dob else None,
+            batch=batch,
+            cgpa=float(cgpa) if cgpa else 0.0,
+            backlogs=int(backlogs) if backlogs else 0,
+            address=address,
+            tenth_percent=float(tenth_percent) if tenth_percent else None,
+            twelfth_percent=float(twelfth_percent) if twelfth_percent else None
+        )
+        db.session.add(new_student)
+        db.session.commit()
+        
+        flash('Registration successful! Please login.', 'success')
+        return redirect(url_for('loginpage'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error creating student record: {e}', 'danger')
+        return redirect(url_for('register'))
+
+
+
+
+
+
 # ─── Logout ──────────────────────────────────────────────────────────────────
 @app.route('/logout')
 def logout():
-    response = redirect(url_for('index'))
+    response = redirect(url_for('home'))
     unset_jwt_cookies(response)
     return response
 
@@ -271,7 +357,29 @@ def student_dashboard():
     claims  = get_jwt()
     regno   = claims.get('regno')
     student = Student.query.filter_by(regno=regno).first()
-    return render_template('student_dashboard.html', student=student)
+    
+    # Stats for overview cards
+    stats = {
+        'total_applied': 0,
+        'shortlisted': 0,
+        'interviews': 0,
+        'rejected': 0
+    }
+    
+    # Default empty lists for template sections
+    applications = []
+    jobs = []
+    deadlines = []
+    skills = []
+    
+    return render_template('student_dashboard.html', 
+                         student=student,
+                         stats=stats,
+                         applications=applications,
+                         jobs=jobs,
+                         deadlines=deadlines,
+                         skills=skills)
+
 
 
 @app.route('/hod_dashboard')

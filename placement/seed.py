@@ -145,7 +145,7 @@ def seed_data(reset=False):
 
                 # Create Student Profile
                 student_profile = Student(
-                    user_id=new_user.id,
+                    student_id=new_user.id,
                     name=s_data['full_name'],
                     email=s_data['email'],
                     phone=s_data['phone'],
@@ -179,4 +179,3 @@ if __name__ == '__main__':
     import sys
     reset_flag = '--reset' in sys.argv
     seed_data(reset=reset_flag)
-
