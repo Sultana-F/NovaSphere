@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from models import db, User, Role, LoginDetail, Student
+from models import db, User, Role, LoginDetail, Student, JobPosting, Application
 from flask_jwt_extended import (
     create_access_token, jwt_required, get_jwt_identity,
     get_jti, JWTManager, set_access_cookies, unset_jwt_cookies, decode_token
@@ -12,6 +12,13 @@ from logicemail import  mail,send_email
 import os
 from datetime import datetime, timezone, timedelta
 import re
+import pandas as pd
+from io import BytesIO
+from flask import send_file
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 
 
 
@@ -272,8 +279,19 @@ def register_student():
     password = request.form.get('password', '').strip() # Get password from form input
     
     
-    #validate registration number format  using regex where U is fixed, 16 is year of admission, NB is department code, 23 is batch year, S or C is fixed and 0120 is unique number
-    regno_pattern = r'^U\d{2}NB\d{2}[SC]\d{4}$'
+    #validate registration number format  using regex where U is fixed, 16 is year of admission, NB is department code, 23 is batch year, S  is fixed and 0120 is unique number
+    #validate the batch year based on the batch entered by student taking in consideration the last two digits for eg if batch is 2022-25 then it will take 25 and compare with regno[3:5] which is 23 in this case and it will show error because batch year and regno year should match
+    batch_year_pattern = r'^\d{4}-\d{2}$'
+    if not re.fullmatch(batch_year_pattern, batch):
+        flash('Invalid batch format. Please follow the format: 2022-25', 'danger')
+    #validate batch year matches regno year
+    batch_year = batch.split('-')[1]  # Get the last two digits of the batch year
+    regno_year = regno[5:7]           # Get the year part from the registration number
+    if batch_year != regno_year:    
+        flash('Batch year does not match registration number year.', 'danger')
+        return redirect(url_for('register'))
+    
+    regno_pattern = r'^U16NB\d{2}[S]\d{4}$'
     if not re.fullmatch(regno_pattern, regno):
         flash('Invalid registration number format. Please follow the format: U16NB23S0120', 'danger')
         return redirect(url_for('register'))
@@ -358,17 +376,20 @@ def student_dashboard():
     regno   = claims.get('regno')
     student = Student.query.filter_by(regno=regno).first()
     
-    # Stats for overview cards
+    # Fetch stats for overview cards
+    applications = Application.query.filter_by(student_id=student.id).all()
     stats = {
-        'total_applied': 0,
-        'shortlisted': 0,
-        'interviews': 0,
-        'rejected': 0
+        'total_applied': len(applications),
+        'shortlisted': len([a for a in applications if a.status == 'shortlisted']),
+        'interviews': len([a for a in applications if a.status == 'interviewed']),
+        'rejected': len([a for a in applications if a.status == 'rejected'])
     }
     
-    # Default empty lists for template sections
-    applications = []
-    jobs = []
+    # Store applied job IDs for UI status updates
+    applied_job_ids = [a.job_id for a in applications]
+    
+    # Fetch active job postings
+    jobs = JobPosting.query.order_by(JobPosting.deadline.desc()).all()
     deadlines = []
     skills = []
     
@@ -377,8 +398,39 @@ def student_dashboard():
                          stats=stats,
                          applications=applications,
                          jobs=jobs,
+                         applied_job_ids=applied_job_ids,
                          deadlines=deadlines,
                          skills=skills)
+
+
+@app.route('/apply_job/<int:job_id>', methods=['POST'])
+@login_required(roles=['student'])
+def apply_job(job_id):
+    from flask_jwt_extended import get_jwt
+    claims = get_jwt()
+    regno = claims.get('regno')
+    student = Student.query.filter_by(regno=regno).first()
+
+    if not student:
+        flash('Student record not found.', 'danger')
+        return redirect(url_for('student_dashboard'))
+    
+    # Check if already applied
+    existing = Application.query.filter_by(job_id=job_id, student_id=student.id).first()
+    if existing:
+        flash('You have already applied for this position.', 'warning')
+        return redirect(url_for('student_dashboard'))
+    
+    try:
+        new_app = Application(job_id=job_id, student_id=student.id)
+        db.session.add(new_app)
+        db.session.commit()
+        flash('Application submitted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error applying for job: {str(e)}', 'danger')
+
+    return redirect(url_for('student_dashboard'))
 
 
 
@@ -397,7 +449,242 @@ def tpo_dashboard():
     from flask_jwt_extended import get_jwt_identity
     email = get_jwt_identity()
     user  = User.query.filter_by(email=email).first()
-    return render_template('tpo_dashboard.html', user=user)
+    jobs  = JobPosting.query.order_by(JobPosting.created_at.desc()).all()
+    return render_template('tpo_dashboard.html', user=user, jobs=jobs)
+
+
+@app.route('/track_registrations')
+@login_required(roles=['tpo'])
+def track_registrations():
+    from flask_jwt_extended import get_jwt_identity
+    email = get_jwt_identity()
+    user  = User.query.filter_by(email=email).first()
+    jobs  = JobPosting.query.order_by(JobPosting.created_at.desc()).all()
+    return render_template('track_registrations.html', user=user, jobs=jobs)
+
+
+@app.route('/post_job', methods=['POST'])
+@login_required(roles=['tpo'])
+def post_job():
+    from flask_jwt_extended import get_jwt_identity
+    email = get_jwt_identity()
+    user  = User.query.filter_by(email=email).first()
+
+    company_name = request.form.get('company_name')
+    job_role = request.form.get('job_role')
+    job_description = request.form.get('job_description')
+    eligibility_criteria = request.form.get('eligibility_criteria')
+    salary_package = request.form.get('salary_package')
+    location = request.form.get('location')
+    deadline_str = request.form.get('deadline')
+    form_link = request.form.get('form_link')
+
+    try:
+        deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
+        new_job = JobPosting(
+            company_name=company_name,
+            job_role=job_role,
+            job_description=job_description,
+            eligibility_criteria=eligibility_criteria,
+            salary_package=salary_package,
+            location=location,
+            deadline=deadline,
+            form_link=form_link,
+            posted_by=user.id
+        )
+        db.session.add(new_job)
+        db.session.commit()
+        flash('Job posting published successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error publishing job: {str(e)}', 'danger')
+
+    return redirect(url_for('tpo_dashboard'))
+
+
+@app.route('/job_applicants/<int:job_id>')
+@login_required(roles=['tpo'])
+def job_applicants(job_id):
+    job = JobPosting.query.get_or_404(job_id)
+    # Fetch applications with joined students
+    applications = Application.query.filter_by(job_id=job_id).all()
+    return render_template('job_applicants.html', job=job, applications=applications)
+
+
+@app.route('/update_application_status/<int:app_id>', methods=['POST'])
+@login_required(roles=['tpo'])
+def update_application_status(app_id):
+    application = Application.query.get_or_404(app_id)
+    new_status = request.form.get('status')
+    
+    if new_status in ['pending', 'shortlisted', 'interviewed', 'rejected', 'selected']:
+        application.status = new_status
+        db.session.commit()
+        flash(f'Status updated to {new_status}!', 'success')
+    else:
+        flash('Invalid status provided.', 'danger')
+        
+    return redirect(url_for('job_applicants', job_id=application.job_id))
+
+
+@app.route('/update_job_form/<int:job_id>', methods=['GET', 'POST'])
+@login_required(roles=['tpo'])
+def update_job_form(job_id):
+    job = JobPosting.query.get_or_404(job_id)
+    
+    if request.method == 'GET':
+        # Return job details for the edit modal
+        return {
+            'id': job.id,
+            'company_name': job.company_name,
+            'job_role': job.job_role,
+            'job_description': job.job_description,
+            'eligibility_criteria': job.eligibility_criteria,
+            'salary_package': job.salary_package,
+            'location': job.location,
+            'deadline': job.deadline.strftime('%Y-%m-%dT%H:%M'),
+            'form_link': job.form_link
+        }
+
+    # Extract all fields from the form
+    company_name = request.form.get('company_name')
+    job_role = request.form.get('job_role')
+    job_description = request.form.get('job_description')
+    eligibility_criteria = request.form.get('eligibility_criteria')
+    department = request.form.get('department')
+    location = request.form.get('location')
+    deadline_str = request.form.get('deadline')
+    form_link = request.form.get('form_link')
+    
+    try:
+        job.company_name = company_name
+        job.job_role = job_role
+        job.job_description = job_description
+        job.eligibility_criteria = eligibility_criteria
+        job.department = department
+        job.location = location
+        if deadline_str:
+            job.deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
+        job.form_link = form_link
+        
+        db.session.commit()
+        flash(f'Placement drive for {job.company_name} updated successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating drive: {str(e)}', 'danger')
+        
+    return redirect(url_for('tpo_dashboard'))
+
+
+@app.route('/download_applicants_excel/<int:job_id>')
+@login_required(roles=['tpo'])
+def download_applicants_excel(job_id):
+    job = JobPosting.query.get_or_404(job_id)
+    applications = Application.query.filter_by(job_id=job_id).all()
+    
+    data = []
+    for app in applications:
+        data.append({
+            'Student Name': app.student.name,
+            'Reg No': app.student.regno,
+            'Email': app.student.email,
+            'Phone': app.student.phone,
+            'Dept': app.student.department,
+            'Sem': app.student.sem,
+            'CGPA': app.student.cgpa,
+            'Status': app.status.capitalize(),
+            'Applied Date': app.applied_at.strftime('%Y-%m-%d %H:%M')
+        })
+    
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Applicants')
+    
+    output.seek(0)
+    filename = f"Applicants_{job.company_name}_{job.job_role}.xlsx".replace(' ', '_')
+    
+    return send_file(output, 
+                     download_name=filename, 
+                     as_attachment=True,
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+@app.route('/download_applicants_pdf/<int:job_id>')
+@login_required(roles=['tpo'])
+def download_applicants_pdf(job_id):
+    job = JobPosting.query.get_or_404(job_id)
+    applications = Application.query.filter_by(job_id=job_id).all()
+    
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    title = Paragraph(f"<b>Applicant Report - {job.company_name}</b>", styles['Title'])
+    subtitle = Paragraph(f"Role: {job.job_role} | Date: {datetime.now().strftime('%d %b, %Y')}", styles['Heading2'])
+    elements.extend([title, subtitle, Spacer(1, 20)])
+    
+    # Table Header
+    data = [['Student Name', 'Reg No', 'Email', 'Dept/Sem', 'CGPA', 'Status']]
+    
+    # Table Data
+    for app in applications:
+        data.append([
+            app.student.name,
+            app.student.regno,
+            app.student.email,
+            f"{app.student.department}/{app.student.sem}",
+            str(app.student.cgpa),
+            app.status.capitalize()
+        ])
+    
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    
+    elements.append(table)
+    doc.build(elements)
+    
+    buffer.seek(0)
+    filename = f"Applicants_{job.company_name}_{job.job_role}.pdf".replace(' ', '_')
+    
+    return send_file(buffer, 
+                     download_name=filename, 
+                     as_attachment=True,
+                     mimetype='application/pdf')
+
+
+@app.route('/change_password', methods=['POST'])
+@jwt_required()
+def change_password():
+    email = get_jwt_identity()
+    user = User.query.filter_by(email=email).first()
+    
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+    
+    if not bcrypt.check_password_hash(user.password, current_password):
+        flash('Current password incorrect.', 'danger')
+    elif new_password != confirm_password:
+        flash('New passwords do not match.', 'danger')
+    else:
+        user.password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        db.session.commit()
+        flash('Password updated successfully!', 'success')
+        
+    # Redirect back to the referrer or dashboard
+    return redirect(request.referrer or url_for('home'))
 
 
 # ─────────────────────────────────────────────────────────────────────────────

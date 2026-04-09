@@ -113,3 +113,37 @@ class Student(db.Model):
         if self.profile_completion < 100:
             return "Complete your profile details."
         return "Apply for your first job!"
+
+# ─── Job Posting Model ───────────────────────────────────────────────────────
+
+class JobPosting(db.Model):
+    __tablename__ = 'job_postings'
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(100), nullable=False)
+    job_role = db.Column(db.String(100), nullable=False)
+    job_description = db.Column(db.Text, nullable=False)
+    eligibility_criteria = db.Column(db.Text)
+    salary_package = db.Column(db.String(50))
+    location = db.Column(db.String(100))
+    deadline = db.Column(db.DateTime, nullable=False)
+    form_link = db.Column(db.String(500)) # Google Form link
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    posted_by = db.Column(db.Integer, db.ForeignKey('users.id')) # TPO ID
+
+
+# ─── Application Model ───────────────────────────────────────────────────────
+
+class Application(db.Model):
+    __tablename__ = 'applications'
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
+    status = db.Column(db.Enum('pending', 'shortlisted', 'interviewed', 'rejected', 'selected'), default='pending')
+    applied_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    job = db.relationship('JobPosting', back_populates='applications')
+    student = db.relationship('Student', backref='job_applications') # Backref to access all applications of a student
+
+# Update JobPosting model to include the back_populates
+JobPosting.applications = db.relationship('Application', back_populates='job', cascade="all, delete-orphan")
