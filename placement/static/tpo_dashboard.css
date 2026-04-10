@@ -1,0 +1,12 @@
+/* Using only Bootstrap utility classes for TPO Dashboard */
+    .nav-pills .nav-link.active {
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+        }
+        .transform-hover:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+        .settings-sublink {
+            font-size: 0.85rem !important;
+            padding: 8px 15px 8px 45px !important;
+        }

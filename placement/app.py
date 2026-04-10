@@ -2,8 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from models import db, User, Role, LoginDetail, Student, JobPosting, Application
 from flask_jwt_extended import (
     create_access_token, jwt_required, get_jwt_identity,
-    get_jti, JWTManager, set_access_cookies, unset_jwt_cookies, decode_token
+    get_jti, JWTManager, set_access_cookies, unset_jwt_cookies, decode_token,get_jwt
 )
+
 from functools import wraps
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
@@ -371,7 +372,6 @@ def admin():
 @app.route('/student_dashboard')
 @login_required(roles=['student'])
 def student_dashboard():
-    from flask_jwt_extended import get_jwt
     claims  = get_jwt()
     regno   = claims.get('regno')
     student = Student.query.filter_by(regno=regno).first()
@@ -406,7 +406,6 @@ def student_dashboard():
 @app.route('/apply_job/<int:job_id>', methods=['POST'])
 @login_required(roles=['student'])
 def apply_job(job_id):
-    from flask_jwt_extended import get_jwt
     claims = get_jwt()
     regno = claims.get('regno')
     student = Student.query.filter_by(regno=regno).first()

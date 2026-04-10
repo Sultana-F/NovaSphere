@@ -6,4 +6,6 @@ flask-jwt-extended
 flask-dotenv
 flask-mail
 flask-bcrypt
-
+pandas
+openpyxl 
+reportlab
