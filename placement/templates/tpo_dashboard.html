@@ -7,6 +7,8 @@
     <title>TPO Dashboard - NOVASPHERE</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{{url_for('static',filename='tpo_dashboard.css')}}">
 </head>
 
@@ -15,88 +17,83 @@
     <div class="d-flex">
 
         <!-- ───── Sidebar ───── -->
-        <div class="d-flex flex-column flex-shrink-0 bg-white border-end shadow-sm vh-100 position-fixed"
-            style="width:260px;">
+        <div class="sidebar-wrapper">
             <!-- Brand -->
-            <div class="px-4 py-4 border-bottom shadow-sm text-center">
-                <span class="fw-bold fs-4 text-dark text-uppercase" style="letter-spacing: 1px;">NOVA</span><span
-                    class="fw-bold fs-4 text-warning">SPHERE</span>
+            <div class="brand-section">
+                <span class="brand-text-nova">NOVA</span><span class="brand-text-sphere">SPHERE</span>
             </div>
 
             <!-- Sidebar Navigation (Tab Nav) -->
-            <div class="nav flex-column nav-pills px-2 py-4 gap-2 flex-grow-1" id="v-pills-tab" role="tablist"
-                aria-orientation="vertical">
-                <button
-                    class="nav-link active  d-flex align-items-center gap-3 fw-semibold py-2 px-3 border-0 text-start"
-                    id="v-pills
-                    -dash-tab" data-bs-toggle="pill" data-bs-target="#v-pills-dash" type="button" role="tab">
+            <div class="sidebar-nav" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <a class="sidebar-link nav-link active" data-bs-toggle="pill" data-bs-target="#v-pills-dash" type="button" role="tab">
                     <i class="bi bi-grid-1x2-fill"></i> Dashboard
-                </button>
-                <button class="nav-link d-flex align-items-center gap-3 fw-semibold py-2 px-3 border-0 text-start"
-                    id="v-pills-add-tab" data-bs-toggle="pill" data-bs-target="#v-pills-add" type="button" role="tab">
+                </a>
+                <a class="sidebar-link nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-add" type="button" role="tab">
                     <i class="bi bi-plus-circle-fill"></i> Publish New Drive
-                </button>
+                </a>
 
-                <button class="nav-link d-flex align-items-center gap-3 fw-semibold py-2 px-3 border-0 text-start"
-                    id="v-pills-track-tab" data-bs-toggle="pill" data-bs-target="#v-pills-track" type="button"
-                    role="tab">
+                <a class="sidebar-link nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-track" type="button" role="tab"
+                    href="#v-pills-track">
                     <i class="bi bi-graph-up-arrow"></i> Registration Track
-                </button>
+                </a>
+
+                <a class="sidebar-link nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-notice" type="button" role="tab">
+                    <i class="bi bi-megaphone-fill"></i> Notice Board
+                </a>
+
+                <a class="sidebar-link nav-link" data-bs-toggle="pill" data-bs-target="#v-pills-analytics" type="button" role="tab">
+                    <i class="bi bi-bar-chart-line-fill"></i> Advanced Analytics
+                </a>
 
                 <hr class="mx-3 opacity-10">
 
                 <!-- Settings Dropdown (Collapse) -->
-                <div id="settingsArea">
-                    <button
-                        class="nav-link d-flex align-items-center justify-content-between gap-3 fw-semibold py-2 px-3 border-0 text-start w-100 text-secondary"
-                        type="button" data-bs-toggle="collapse" data-bs-target="#settingsCollapse"
-                        aria-expanded="false">
+                <div class="nav-item">
+                    <a class="sidebar-link justify-content-between text-secondary" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#settingsCollapse" aria-expanded="false"
+                        href="#settingsCollapse">
                         <span><i class="bi bi-gear-fill me-3"></i>Settings</span>
                         <i class="bi bi-chevron-down small"></i>
-                    </button>
+                    </a>
                     <div class="collapse mt-1" id="settingsCollapse">
-                        <button
-                            class="nav-link settings-sublink d-flex align-items-center gap-2 border-0 text-start w-100 mb-1"
-                            id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile"
-                            type="button" role="tab">
+                        <a class="sidebar-link nav-link settings-sublink mb-1" id="v-pills-profile-tab" data-bs-toggle="pill"
+                            data-bs-target="#v-pills-profile" type="button" role="tab" href="#v-pills-profile">
                             <i class="bi bi-person-badge"></i> My Profile
-                        </button>
-                        <button
-                            class="nav-link settings-sublink d-flex align-items-center gap-2 border-0 text-start w-100"
-                            id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings"
-                            type="button" role="tab">
+                        </a>
+                        <a class="sidebar-link nav-link settings-sublink" id="v-pills-settings-tab" data-bs-toggle="pill"
+                            data-bs-target="#v-pills-settings" type="button" role="tab" href="#v-pills-settings">
                             <i class="bi bi-shield-lock"></i>Change Password
-                        </button>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Logout -->
-                <a href="/logout"
-                    class="btn btn-outline-danger d-flex align-items-center gap-2 mx-3 mt-auto mb-4 fw-bold rounded-pill shadow-sm py-2">
-                    <i class="bi bi-door-open-fill"></i> Logout
-                </a>
+                <div class="mt-auto px-3 mb-4">
+                    <a href="/logout"
+                        class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-door-open-fill"></i> <span>Logout Portal</span>
+                    </a>
+                </div>
             </div>
         </div>
         <!-- ───── End Sidebar ───── -->
 
 
         <!-- ───── Main Content Window ───── -->
-        <div class="flex-grow-1 p-4" style="margin-left: 260px;">
+        <div class="main-wrapper">
 
             <!-- Global Header -->
-            <div
-                class="d-flex justify-content-between align-items-center bg-white rounded-4 shadow-sm px-4 py-3 mb-4 border border-opacity-10">
-                <h5 class="fw-bold mb-0 text-dark">
+            <div class="global-header">
+                <h5 class="header-title">
                     <i class="bi bi-mortarboard-fill me-2 text-primary"></i>TPO Control Center
                 </h5>
                 <div class="d-flex align-items-center gap-3">
                     <div class="text-end d-none d-sm-block">
                         <p class="small fw-bold mb-0 text-dark">{{ user.full_name }}</p>
-                        <p class="text-muted extra-small mb-0 opacity-75" style="font-size: 0.7rem;">Placement Officer
+                        <p class="text-muted extra-small mb-0 opacity-75 extra-small-text">Placement Officer
                         </p>
                     </div>
-                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm border border-white border-2"
-                        style="width:42px;height:42px; font-size: 1.1rem;">
+                    <div class="avatar-badge">
                         {{ user.full_name[0]|upper }}
                     </div>
                 </div>
@@ -122,60 +119,84 @@
                 <div class="tab-pane fade show active" id="v-pills-dash" role="tabpanel">
                     <div class="row g-4 mb-4">
                         <div class="col-md-9">
-                            <div
-                                class="bg-primary text-white rounded-4 p-4 shadow-sm h-100 d-flex flex-column justify-content-center border border-white border-opacity-25 shadow">
-                                <h3 class="fw-bold mb-1">Welcome, Officer {{ user.full_name.split(' ')[-1] }}!</h3>
+                            <div class="welcome-hero">
+                                <h3 class="mb-1">Welcome, Officer {{ user.full_name.split(' ')[-1] }}!</h3>
                                 <p class="mb-0 opacity-75 small">Manage student careers and corporate relations from one
                                     central hub.</p>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div
-                                class="card border-0 shadow-sm rounded-4 h-100 p-3 text-center border-start border-primary border-4">
-                                <span class="small fw-bold text-muted text-uppercase mb-1"
-                                    style="font-size: 0.65rem;">Active Postings</span>
-                                <div class="h2 fw-bold text-primary mb-0">{{ jobs|length }}</div>
+                            <div class="stat-card">
+                                <div class="stat-icon-container bg-soft-primary">
+                                    <i class="bi bi-briefcase-fill"></i>
+                                </div>
+                                <span class="stat-label">Live Drives</span>
+                                <div class="stat-value">{{ jobs | selectattr('deadline', 'gt', now) | list | length }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon-container bg-soft-warning">
+                                    <i class="bi bi-archive-fill"></i>
+                                </div>
+                                <span class="stat-label">Total Drives</span>
+                                <div class="stat-value">{{ jobs|length }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon-container bg-soft-success">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                <span class="stat-label">Total Applicants</span>
+                                <div class="stat-value">
+                                    {% set total_apps = 0 %}
+                                    {% for job in jobs %}
+                                    {% set total_apps = total_apps + job.applications|length %}
+                                    {% endfor %}
+                                    {{ total_apps }}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                        <div
-                            class="card-header bg-white border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
-                            <h5 class="fw-bold mb-0">Active Campus Drives</h5>
+                    <div class="data-card">
+                        <div class="data-card-header">
+                            <h5 class="fw-bold mb-0">All Campus Drives</h5>
                             <button class="btn btn-sm btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm"
                                 onclick="document.getElementById('v-pills-add-tab').click()">
                                 <i class="bi bi-plus-lg me-1"></i> New Entry
                             </button>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="data-card-body">
                             <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr class="text-muted small text-uppercase">
-                                            <th class="ps-3 py-3 fw-bold" style="letter-spacing: 0.5px;">Organization
+                                <table class="table table-hover align-middle mb-0 custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-3">Organization
                                             </th>
-                                            <th class="py-3 fw-bold" style="letter-spacing: 0.5px;">Job Role</th>
-                                            <th class="py-3 fw-bold" style="letter-spacing: 0.5px;">Status</th>
-                                            <th class="py-3 text-center fw-bold" style="letter-spacing: 0.5px;">
+                                            <th>Job Role</th>
+                                            <th>Status</th>
+                                            <th class="text-center">
                                                 Applicants</th>
-                                            <th class="py-3 fw-bold" style="letter-spacing: 0.5px;">Action</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for job in jobs %}
-                                        <tr>
-                                            <td class="ps-3 fw-bold text-dark">{{ job.company_name }}</td>
+                                        <tr class="{% if job.deadline < now %}table-light opacity-75{% endif %}">
+                                            <td class="ps-3">
+                                                <span class="fw-bold text-dark">{{ job.company_name }}</span>
+                                                <div class="small text-muted">Deadline: {{ job.deadline.strftime('%d %b %Y') }}</div>
+                                            </td>
                                             <td class="text-secondary small fw-semibold">{{ job.job_role }}</td>
                                             <td>
-                                                {% if job.form_link %}
-                                                <span
-                                                    class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border border-success border-opacity-10">Link
-                                                    Ready</span>
+                                                {% if job.deadline < now %}
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 py-2 border border-secondary border-opacity-25"><i class="bi bi-clock-history me-1"></i>Expired</span>
+                                                {% elif job.form_link %}
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border border-success border-opacity-10"><i class="bi bi-check-circle me-1"></i>Live</span>
                                                 {% else %}
-                                                <span
-                                                    class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 border border-danger border-opacity-10">Link
-                                                    Pending</span>
+                                                <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2 border border-warning border-opacity-10"><i class="bi bi-exclamation-circle me-1"></i>Link Pending</span>
                                                 {% endif %}
                                             </td>
                                             <td class="text-center">
@@ -184,9 +205,15 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-start">
+                                                    <button class="btn btn-sm btn-light border rounded-3 text-info"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#viewJobModal{{ job.id }}"
+                                                        title="View Drive Details">
+                                                        <i class="bi bi-eye-fill"></i>
+                                                    </button>
                                                     <a href="/job_applicants/{{ job.id }}"
                                                         class="btn btn-sm btn-light border rounded-3 text-primary"
-                                                        title="Details">
+                                                        title="View Applicants">
                                                         <i class="bi bi-box-arrow-up-right"></i>
                                                     </a>
                                                     <button class="btn btn-sm btn-light border rounded-3 text-warning"
@@ -197,6 +224,91 @@
                                                 </div>
                                             </td>
                                         </tr>
+
+                                        <!-- View Job Details Modal -->
+                                        <div class="modal fade" id="viewJobModal{{ job.id }}" tabindex="-1"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content border-0 shadow-lg rounded-4">
+                                                    <div
+                                                        class="modal-header bg-info bg-opacity-10 py-3 rounded-top-4 border-0">
+                                                        <h5 class="modal-title fw-bold text-info"><i
+                                                                class="bi bi-info-circle-fill me-2"></i>Job Requirements
+                                                            & Details</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body p-4 pt-3">
+                                                        <h4 class="fw-bold mb-1">{{ job.job_role }}</h4>
+                                                        <h6 class="text-secondary mb-3 d-flex align-items-center gap-2">
+                                                            <i class="bi bi-building"></i>{{ job.company_name }}
+                                                        </h6>
+                                                        <div class="mb-3 p-3 bg-light rounded-3 border">
+                                                            <strong
+                                                                class="d-block small text-muted text-uppercase mb-2"><i
+                                                                    class="bi bi-card-text me-1"></i>Job
+                                                                Description</strong>
+                                                            <p class="mb-0 small job-desc-text">{{ job.job_description
+                                                                }}</p>
+                                                        </div>
+                                                        <div class="row g-3">
+                                                            <div class="col-6">
+                                                                <div
+                                                                    class="p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-25 h-100 text-center">
+                                                                    <strong
+                                                                        class="d-block small text-primary text-uppercase mb-1">Minimum
+                                                                        CGPA</strong>
+                                                                    <span class="fs-4 fw-black text-primary">{{
+                                                                        job.min_cgpa }}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <div
+                                                                    class="p-3 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25 h-100 text-center">
+                                                                    <strong
+                                                                        class="d-block small text-danger text-uppercase mb-1">Max
+                                                                        Backlogs</strong>
+                                                                    <span class="fs-4 fw-black text-danger">{{
+                                                                        job.max_backlogs }}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <strong
+                                                                    class="small text-muted text-uppercase d-block mb-1"><i
+                                                                        class="bi bi-check2-circle me-1"></i>Eligibility
+                                                                    Criteria</strong>
+                                                                <p class="mb-0 small bg-light p-2 rounded border">{{
+                                                                    job.eligibility_criteria or 'Not specified' }}</p>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <strong
+                                                                    class="small text-muted text-uppercase d-block mb-1"><i
+                                                                        class="bi bi-cash-stack me-1"></i>Salary
+                                                                    Package</strong>
+                                                                <p class="mb-0 small fw-semibold">{{ job.salary_package
+                                                                    or 'Not specified' }}</p>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <strong
+                                                                    class="small text-muted text-uppercase d-block mb-1"><i
+                                                                        class="bi bi-geo-alt-fill me-1"></i>Location</strong>
+                                                                <p class="mb-0 small fw-semibold">{{ job.location or
+                                                                    'Not specified' }}</p>
+                                                            </div>
+                                                            <div class="col-12 border-top pt-3 mt-2">
+                                                                <strong
+                                                                    class="small text-muted text-uppercase d-block mb-1"><i
+                                                                        class="bi bi-link-45deg me-1"></i>Secondary
+                                                                    Application Link (Step 2)</strong>
+                                                                <p class="mb-0 small fw-bold text-primary">{{
+                                                                    job.secondary_form_link or 'No secondary link
+                                                                    configured' }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         <!-- Edit Job Modal for this specific job -->
                                         <div class="modal fade" id="editJobModal{{ job.id }}" tabindex="-1"
@@ -251,19 +363,31 @@
                                                                         class="form-control rounded-3 shadow-none border-2"
                                                                         rows="2">{{ job.eligibility_criteria }}</textarea>
                                                                 </div>
-                                                                <div class="col-md-6">
-                                                                    <label
-                                                                        class="form-label small fw-bold text-secondary">Department</label>
-                                                                    <input type="text" name="department"
-                                                                        value="{{ job.department }}"
-                                                                        class="form-control rounded-3 shadow-none border-2">
-                                                                </div>
+
                                                                 <div class="col-md-6">
                                                                     <label
                                                                         class="form-label small fw-bold text-secondary">Location</label>
                                                                     <input type="text" name="location"
                                                                         value="{{ job.location }}"
                                                                         class="form-control rounded-3 shadow-none border-2">
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label
+                                                                        class="form-label small fw-bold text-secondary">Minimum
+                                                                        CGPA</label>
+                                                                    <input type="number" step="0.1" name="min_cgpa"
+                                                                        value="{{ job.min_cgpa }}"
+                                                                        class="form-control rounded-3 shadow-none border-2"
+                                                                        required>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label
+                                                                        class="form-label small fw-bold text-secondary">Maximum
+                                                                        Backlogs</label>
+                                                                    <input type="number" name="max_backlogs"
+                                                                        value="{{ job.max_backlogs }}"
+                                                                        class="form-control rounded-3 shadow-none border-2"
+                                                                        required>
                                                                 </div>
                                                                 <div class="col-md-6">
                                                                     <label
@@ -280,6 +404,14 @@
                                                                         Link (URL)</label>
                                                                     <input type="url" name="form_link"
                                                                         value="{{ job.form_link or '' }}"
+                                                                        class="form-control rounded-3 shadow-none border-2">
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label
+                                                                        class="form-label small fw-bold text-secondary">Secondary
+                                                                        Form Link (Step 2)</label>
+                                                                    <input type="url" name="secondary_form_link"
+                                                                        value="{{ job.secondary_form_link or '' }}"
                                                                         class="form-control rounded-3 shadow-none border-2">
                                                                 </div>
                                                             </div>
@@ -306,7 +438,7 @@
 
                 <!-- ─── TAB 2: PUBLISH DRIVE (FORM) ─── -->
                 <div class="tab-pane fade" id="v-pills-add" role="tabpanel">
-                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <div class="profile-card p-4">
                         <div class="mb-4 d-flex align-items-center gap-3 border-bottom pb-4">
                             <div class="bg-warning bg-opacity-10 p-3 rounded-4">
                                 <i class="bi bi-megaphone-fill fs-2 text-warning"></i>
@@ -343,13 +475,24 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-secondary">Application Form Link
-                                        (Google/Microsoft Forms)</label>
+                                        (Primary)</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-2 border-end-0 rounded-start-3"><i
                                                 class="bi bi-link-45deg"></i></span>
                                         <input type="url" name="form_link"
                                             class="form-control rounded-end-3 py-2 border-2 border-start-0 shadow-none"
-                                            placeholder="https://docs.google.com/forms/...">
+                                            placeholder="https://docs.google.com/forms/primary...">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary">Secondary Application Link
+                                        (Step 2)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-2 border-end-0 rounded-start-3"><i
+                                                class="bi bi-link-45deg"></i></span>
+                                        <input type="url" name="secondary_form_link"
+                                            class="form-control rounded-end-3 py-2 border-2 border-start-0 shadow-none"
+                                            placeholder="https://docs.google.com/forms/step2...">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -369,6 +512,20 @@
                                     <input type="text" name="location"
                                         class="form-control rounded-3 py-2 border-2 shadow-none"
                                         placeholder="e.g. Pune, Maharashtra" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-secondary">Min CGPA <span
+                                            class="text-danger">*</span></label>
+                                    <input type="number" step="0.1" name="min_cgpa"
+                                        class="form-control rounded-3 py-2 border-2 shadow-none" placeholder="e.g. 7.5"
+                                        required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-secondary">Max Backlogs <span
+                                            class="text-danger">*</span></label>
+                                    <input type="number" name="max_backlogs"
+                                        class="form-control rounded-3 py-2 border-2 shadow-none" placeholder="e.g. 2"
+                                        required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-secondary">Application Deadline <span
@@ -395,30 +552,39 @@
                     <div class="row g-4">
                         {% for job in jobs %}
                         <div class="col-xl-4 col-md-6">
-                            <div
-                                class="card border-0 shadow-sm rounded-4 p-4 h-100 transform-hover border-top border-warning border-4">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <h5 class="fw-bold mb-0 text-dark">{{ job.company_name }}</h5>
-                                    <span class="badge bg-dark rounded-pill py-2 px-3 fw-bold shadow-sm"
-                                        style="font-size: 0.7rem;">
-                                        {{ job.applications|length }} Applied
-                                    </span>
+                            <div class="track-card">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="company-name mb-0">{{ job.company_name }}</h5>
+                                        <p class="job-role mb-0">
+                                            <i class="bi bi-briefcase me-1"></i> {{ job.job_role }}
+                                        </p>
+                                    </div>
+                                    <div class="d-flex flex-column align-items-end gap-2">
+                                        <span class="applicant-badge">
+                                            {{ job.applications|length }} Applied
+                                        </span>
+                                        {% if job.deadline < now %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3">
+                                            <i class="bi bi-clock-history me-1"></i> EXPIRED
+                                        </span>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <p class="text-secondary small fw-semibold mb-4 d-flex align-items-center gap-2">
-                                    <i class="bi bi-briefcase text-primary opacity-75"></i> {{ job.job_role }}
-                                </p>
 
-
-                                <div class="mt-auto pt-4 border-top d-flex justify-content-between align-items-center">
-                                    <span class="text-danger small fw-bold"><i class="bi bi-clock me-1"></i>Ends: {{
-                                        job.deadline.strftime('%d %b') }}</span>
+                                <div class="date-footer">
+                                    <span class="deadline-text">
+                                        <i class="bi bi-calendar-event"></i>
+                                        Ends: {{ job.deadline.strftime('%d %b') }}
+                                    </span>
                                     <div class="d-flex gap-2">
                                         <a href="/download_applicants_excel/{{ job.id }}"
-                                            class="btn btn-sm btn-outline-success border-0" title="Excel"><i
-                                                class="bi bi-file-earmark-spreadsheet-fill fs-5"></i></a>
-                                        <a href="/job_applicants/{{ job.id }}"
-                                            class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">View
-                                            List</a>
+                                            class="btn btn-sm btn-light border-0 text-success" title="Download Excel">
+                                            <i class="bi bi-file-earmark-spreadsheet-fill fs-5"></i>
+                                        </a>
+                                        <a href="/job_applicants/{{ job.id }}" class="btn btn-sm btn-primary px-3">
+                                            View List
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -429,11 +595,10 @@
 
                 <!-- ─── TAB 4: PROFILE SETTINGS ─── -->
                 <div class="tab-pane fade" id="v-pills-profile" role="tabpanel">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 overflow-hidden">
+                    <div class="profile-card overflow-hidden">
                         <div class="row align-items-center g-4 mb-4">
                             <div class="col-auto">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow border border-white border-4"
-                                    style="width:100px; height:100px; font-size: 2.5rem;">
+                                <div class="profile-avatar-lg">
                                     {{ user.full_name[0]|upper }}
                                 </div>
                             </div>
@@ -441,16 +606,16 @@
                                 <h2 class="fw-bold mb-1">{{ user.full_name }}</h2>
                                 <p class="text-muted fw-semibold mb-0"><i class="bi bi-envelope me-2"></i>{{ user.email
                                     }}</p>
-                                <p class="text-muted extra-small mb-0 text-uppercase fw-bold opacity-75"
-                                    style="letter-spacing: 1px;">Training & Placement Officer (Portal Administrator)</p>
+                                <p class="text-muted extra-small mb-0 text-uppercase fw-bold opacity-75 admin-tag">
+                                    Training & Placement Officer (Portal Administrator)</p>
                             </div>
                         </div>
 
                         <div class="row g-4 pt-4 border-top">
                             <div class="col-md-6">
                                 <div class="bg-light p-3 rounded-4 border border-opacity-10">
-                                    <p class="extra-small fw-bold text-muted text-uppercase mb-1"
-                                        style="font-size: 0.65rem;">Contact Number</p>
+                                    <p class="extra-small fw-bold text-muted text-uppercase mb-1 stat-badge-sm">Contact
+                                        Number</p>
                                     <p class="fw-600 mb-0"><i
                                             class="bi bi-telephone-fill text-primary me-2 shadow-none"></i> {{
                                         user.phone or '+91 9XXXX XXXXX' }}</p>
@@ -458,8 +623,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="bg-light p-3 rounded-4 border border-opacity-10 h-100">
-                                    <p class="extra-small fw-bold text-muted text-uppercase mb-1"
-                                        style="font-size: 0.65rem;">Account Status</p>
+                                    <p class="extra-small fw-bold text-muted text-uppercase mb-1 stat-badge-sm">Account
+                                        Status</p>
                                     <p class="fw-600 mb-0"><span
                                             class="badge bg-success rounded-pill px-3 me-2">Verified</span> Role: {{
                                         user.role|upper }}</p>
@@ -508,8 +673,8 @@
                                             class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow-sm">
                                             <i class="bi bi-shield-check me-2"></i>Update Global Access Credentials
                                         </button>
-                                        <p class="mt-3 extra-small text-muted fw-bold text-uppercase"
-                                            style="font-size: 0.6rem;">Action will be logged in security audit trails
+                                        <p class="mt-3 extra-small text-muted fw-bold text-uppercase audit-text">Action
+                                            will be logged in security audit trails
                                         </p>
                                     </div>
                                 </form>
@@ -518,6 +683,173 @@
                     </div>
                 </div>
 
+                <!-- ─── TAB 6: NOTICE BOARD (BROADCASTS) ─── -->
+                <div class="tab-pane fade" id="v-pills-notice" role="tabpanel">
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                                <h4 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                                    <i class="bi bi-megaphone-fill text-primary"></i> Create Broadcast
+                                </h4>
+                                <form action="/post_announcement" method="POST">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-secondary">Announcement Title</label>
+                                        <input type="text" name="title" class="form-control rounded-3 border-2 shadow-none py-2" placeholder="e.g. Schedule Update for TCS" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-secondary">Category</label>
+                                        <select name="category" class="form-select rounded-3 border-2 shadow-none py-2">
+                                            <option value="general">General Update</option>
+                                            <option value="urgent">Urgent Action Required</option>
+                                            <option value="drive">Drives & Schedules</option>
+                                            <option value="results">Selection Results</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-secondary">Content Details</label>
+                                        <textarea name="content" class="form-control rounded-3 border-2 shadow-none p-3" rows="5" placeholder="Enter the detailed announcement here..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill fw-bold shadow-sm">
+                                        <i class="bi bi-send-fill me-2"></i>Post to Notice Board
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="card border-0 shadow-sm rounded-4 p-4">
+                                <h4 class="fw-bold mb-4">Active Announcements</h4>
+                                <div class="announcement-list">
+                                    {% if announcements %}
+                                        {% for note in announcements %}
+                                        <div class="p-3 bg-light rounded-4 border border-opacity-10 mb-3 hover-shadow transition">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <span class="badge {% if note.category == 'urgent' %}bg-danger{% elif note.category == 'results' %}bg-success{% else %}bg-primary{% endif %} rounded-pill px-3 py-1 mb-2">
+                                                        {{ note.category|upper }}
+                                                    </span>
+                                                    <h6 class="fw-bold mb-0">{{ note.title }}</h6>
+                                                </div>
+                                                <form action="/delete_announcement/{{ note.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this announcement?')">
+                                                    <button type="submit" class="btn btn-sm text-danger border-0"><i class="bi bi-trash3-fill"></i></button>
+                                                </form>
+                                            </div>
+                                            <p class="small text-muted mb-2">{{ note.content }}</p>
+                                            <div class="d-flex align-items-center gap-2 extra-small text-secondary opacity-75">
+                                                <i class="bi bi-clock"></i> {{ note.created_at.strftime('%d %b, %H:%M') }}
+                                                <span class="mx-1">•</span>
+                                                <i class="bi bi-person"></i> Posted by TPO Office
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-journal-x fs-1 text-muted opacity-25"></i>
+                                            <p class="text-muted mt-2">No active announcements on the board.</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ─── TAB 7: ADVANCED ANALYTICS & REPORTING ─── -->
+                <div class="tab-pane fade" id="v-pills-analytics" role="tabpanel">
+                    <div class="row g-4 mb-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-4 p-4 welcome-hero text-white mb-4">
+                                <h3 class="fw-bold mb-1">Advanced Analytics & Strategic Insights</h3>
+                                <p class="mb-0 opacity-75">Data-driven performance metrics for year-over-year growth and recruitment efficiency.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Selector -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                                <form action="/tpo_dashboard" method="GET" class="d-flex align-items-center gap-3">
+                                    <label class="fw-bold text-secondary text-nowrap"><i class="bi bi-funnel-fill me-1"></i> Filter by Batch:</label>
+                                    <select name="batch" class="form-select rounded-pill border-2" onchange="this.form.submit()">
+                                        <option value="All" {% if selected_batch == 'All' %}selected{% endif %}>Historical Data (All Batches)</option>
+                                        {% for b in batches %}
+                                        <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>Batch {{ b }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <!-- Keep the tab active on reload -->
+                                    <input type="hidden" name="tab" value="analytics">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if analytics %}
+                    <div class="row g-4">
+                        <!-- Chart 1: Placement Trends -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                                <h5 class="fw-bold mb-3 border-bottom pb-2">Placement Trends (YoY)</h5>
+                                <div class="text-center">
+                                    {% if analytics.trend %}
+                                    <img src="data:image/png;base64,{{ analytics.trend }}" class="img-fluid rounded-3" alt="Placement Trends">
+                                    {% else %}
+                                    <div class="py-5 text-muted small">Not enough historical data to generate trends.</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chart 2: Salary Package Distribution -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                                <h5 class="fw-bold mb-3 border-bottom pb-2">Salary Distribution (LPA)</h5>
+                                <div class="text-center">
+                                    {% if analytics.salary %}
+                                    <img src="data:image/png;base64,{{ analytics.salary }}" class="img-fluid rounded-3" alt="Salary Distribution">
+                                    {% else %}
+                                    <div class="py-5 text-muted small">No salary data recorded for placed students.</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chart 3: Department Performance -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                                <h5 class="fw-bold mb-3 border-bottom pb-2">Departmental Performance (%)</h5>
+                                <div class="text-center">
+                                    {% if analytics.dept %}
+                                    <img src="data:image/png;base64,{{ analytics.dept }}" class="img-fluid rounded-3" alt="Department Performance">
+                                    {% else %}
+                                    <div class="py-5 text-muted small">Department data currently unavailable.</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chart 4: Drive Conversion ROI -->
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                                <h5 class="fw-bold mb-3 border-bottom pb-2">Top Recruitment ROI (%)</h5>
+                                <div class="text-center">
+                                    {% if analytics.roi %}
+                                    <img src="data:image/png;base64,{{ analytics.roi }}" class="img-fluid rounded-3" alt="Drive ROI">
+                                    {% else %}
+                                    <div class="py-5 text-muted small">No recruitment ROI data available yet.</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-graph-up text-muted opacity-25" style="font-size: 4rem;"></i>
+                        </div>
+                        <h4 class="text-muted">Analytics Dashboard Initializing</h4>
+                        <p class="text-muted small">Please ensure you have student records and placement data to view advanced insights.</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div> <!-- End tab-content -->
 
         </div>
@@ -528,40 +860,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-
-        // URL Hash support for tabs
-        document.addEventListener("DOMContentLoaded", function () {
-            const hash = window.location.hash;
-            if (hash) {
-                const tabEl = document.querySelector(`button[data-bs-target="${hash}"]`);
-                if (tabEl) {
-                    const tab = new bootstrap.Tab(tabEl);
-                    tab.show();
+        // Tab Persistence Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeTab = urlParams.get('tab');
+            
+            if (activeTab === 'analytics') {
+                const analyticsTab = document.querySelector('a[data-bs-target="#v-pills-analytics"]');
+                if (analyticsTab) {
+                    const tabInstance = bootstrap.Tab.getOrCreateInstance(analyticsTab);
+                    tabInstance.show();
                 }
             }
-
-            // Update hash on tab change
-            const triggerTabs = document.querySelectorAll('button[data-bs-toggle="pill"]');
-            triggerTabs.forEach(t => {
-                t.addEventListener('shown.bs.tab', function (event) {
-                    window.location.hash = event.target.getAttribute('data-bs-target');
-                    // Auto-close placeholder for better mobile UX if needed
-                });
-            });
-
-            // Ensure clicking sublinks shows the parent collapse if not open
-            const subLinks = document.querySelectorAll('.settings-sublink');
-            subLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    const collapseEl = document.getElementById('settingsCollapse');
-                    if (!collapseEl.classList.contains('show')) {
-                        const bsCollapse = new bootstrap.Collapse(collapseEl);
-                        bsCollapse.show();
-                    }
-                });
-            });
         });
     </script>
+
 </body>
 
 </html>

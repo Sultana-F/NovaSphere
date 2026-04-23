@@ -117,7 +117,7 @@ class Student(db.Model):
 # ─── Job Posting Model ───────────────────────────────────────────────────────
 
 class JobPosting(db.Model):
-    __tablename__ = 'job_postings'
+    __tablename__ = 'job_post'
     id = db.Column(db.Integer, primary_key=True)
     company_name = db.Column(db.String(100), nullable=False)
     job_role = db.Column(db.String(100), nullable=False)
@@ -126,7 +126,11 @@ class JobPosting(db.Model):
     salary_package = db.Column(db.String(50))
     location = db.Column(db.String(100))
     deadline = db.Column(db.DateTime, nullable=False)
-    form_link = db.Column(db.String(500)) # Google Form link
+    form_link = db.Column(db.String(500)) # Primary Form link (e.g. Google Form)
+    secondary_form_link = db.Column(db.String(500)) # Secondary Form link
+    status = db.Column(db.Enum('open', 'closed', 'cancelled'), default='open')  # Job posting status
+    min_cgpa = db.Column(db.Float, default=0.0)  # Minimum CGPA requirement
+    max_backlogs = db.Column(db.Integer, default=0)  # Maximum allowed backlogs
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     posted_by = db.Column(db.Integer, db.ForeignKey('users.id')) # TPO ID
 
@@ -136,14 +140,29 @@ class JobPosting(db.Model):
 class Application(db.Model):
     __tablename__ = 'applications'
     id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('job_post.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
     status = db.Column(db.Enum('pending', 'shortlisted', 'interviewed', 'rejected', 'selected'), default='pending')
+    secondary_data = db.Column(db.Text) # To store ID/Details from external form
     applied_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     job = db.relationship('JobPosting', back_populates='applications')
     student = db.relationship('Student', backref='job_applications') # Backref to access all applications of a student
+
+# ─── Announcement Model (Notice Board) ───────────────────────────────────────
+
+class Announcement(db.Model):
+    __tablename__ = 'announcements'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    category = db.Column(db.Enum('general', 'urgent', 'drive', 'results'), default='general')
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    posted_by = db.Column(db.Integer, db.ForeignKey('users.id')) # TPO/Admin ID
+
+    # Relationship to User for posted_by
+    author = db.relationship('User', backref='announcements')
 
 # Update JobPosting model to include the back_populates
 JobPosting.applications = db.relationship('Application', back_populates='job', cascade="all, delete-orphan")

@@ -9,3 +9,4 @@ flask-bcrypt
 pandas
 openpyxl 
 reportlab
+matplotlib

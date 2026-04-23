@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from models import db, User, Role, LoginDetail, Student, JobPosting, Application
+from models import db, User, Role, LoginDetail, Student, JobPosting, Application, Announcement
 from flask_jwt_extended import (
     create_access_token, jwt_required, get_jwt_identity,
     get_jti, JWTManager, set_access_cookies, unset_jwt_cookies, decode_token,get_jwt
@@ -15,6 +15,10 @@ from datetime import datetime, timezone, timedelta
 import re
 import pandas as pd
 from io import BytesIO
+import base64
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from flask import send_file
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -388,8 +392,16 @@ def student_dashboard():
     # Store applied job IDs for UI status updates
     applied_job_ids = [a.job_id for a in applications]
     
-    # Fetch active job postings
-    jobs = JobPosting.query.order_by(JobPosting.deadline.desc()).all()
+    # Fetch active job postings with open status and future deadlines
+    now = datetime.now()
+    jobs = JobPosting.query.filter(
+        db.or_(JobPosting.status == 'open', JobPosting.status == None),
+        JobPosting.deadline > now
+    ).order_by(JobPosting.deadline.asc()).all()
+    
+    # Fetch Announcements for the notice board
+    announcements = Announcement.query.order_by(Announcement.created_at.desc()).limit(10).all()
+    
     deadlines = []
     skills = []
     
@@ -399,6 +411,7 @@ def student_dashboard():
                          applications=applications,
                          jobs=jobs,
                          applied_job_ids=applied_job_ids,
+                         announcements=announcements,
                          deadlines=deadlines,
                          skills=skills)
 
@@ -409,26 +422,78 @@ def apply_job(job_id):
     claims = get_jwt()
     regno = claims.get('regno')
     student = Student.query.filter_by(regno=regno).first()
+    
 
     if not student:
         flash('Student record not found.', 'danger')
         return redirect(url_for('student_dashboard'))
     
-    # Check if already applied
-    existing = Application.query.filter_by(job_id=job_id, student_id=student.id).first()
-    if existing:
-        flash('You have already applied for this position.', 'warning')
+    # Get job posting
+    job = JobPosting.query.filter_by(id=job_id).first()
+    if not job:
+        flash('Job posting not found.', 'danger')
         return redirect(url_for('student_dashboard'))
     
-    try:
-        new_app = Application(job_id=job_id, student_id=student.id)
-        db.session.add(new_app)
-        db.session.commit()
-        flash('Application submitted successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error applying for job: {str(e)}', 'danger')
+    # Check if job is still open
+    if job.status != 'open':
+        flash('This job posting is no longer open for applications.', 'warning')
+        return redirect(url_for('student_dashboard'))
+    
+    # Check if deadline has passed
+    if job.deadline < datetime.now():
+        flash('The application deadline for this position has passed.', 'warning')
+        return redirect(url_for('student_dashboard'))
+    
+    # Check if student meets CGPA requirement
+    if student.cgpa < job.min_cgpa:
+        flash(f'Automated Verification Failed: Your CGPA ({student.cgpa}) does not meet the minimum requirement ({job.min_cgpa}) for this drive.', 'warning')
+        return redirect(url_for('student_dashboard'))
+    
+    # Check if student exceeds backlogs limit
+    if student.backlogs > job.max_backlogs:
+        flash(f'Automated Verification Failed: Your backlogs ({student.backlogs}) exceed the maximum allowed ({job.max_backlogs}) for this position.', 'warning')
+        return redirect(url_for('student_dashboard'))
+    
+    # Check if student profile is complete (Removed as per request)
+    # if not student.resume:
+    #     flash('Please upload your resume before applying. Go to your profile to upload.', 'info')
+    #     return redirect(url_for('student_dashboard'))
+    
+    # if not student.skills:
+    #     flash('Please add your skills to your profile before applying.', 'info')
+    #     return redirect(url_for('student_dashboard'))
+    
+    # Check if already applied (Disabled to allow repeated redirection to external links)
+    # existing = Application.query.filter_by(job_id=job_id, student_id=student.id).first()
+    # if existing:
+    #     flash('You have already applied for this position.', 'warning')
+    #     return redirect(url_for('student_dashboard'))
+    
+    # Check if already applied (Done silently to allow redirection)
+    existing = Application.query.filter_by(job_id=job_id, student_id=student.id).first()
+    
+    if not existing:
+        try:
+            new_app = Application(job_id=job_id, student_id=student.id)
+            db.session.add(new_app)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error saving application: {e}")
 
+    # Process external redirection if a link exists
+    clean_link = job.form_link.strip() if job.form_link else "" # Remove leading/trailing whitespace
+    
+    if clean_link:
+        flash('Redirecting to the official registration form...', 'success')
+        target_url = clean_link if clean_link.startswith(('http://', 'https://')) else 'https://' + clean_link
+        return  redirect(target_url)
+    else:
+        if not existing:
+            flash('Application submitted successfully! (No external form required for this drive)', 'success')
+        else:
+             flash('You have already applied for this position.', 'info')
+            
     return redirect(url_for('student_dashboard'))
 
 
@@ -449,7 +514,124 @@ def tpo_dashboard():
     email = get_jwt_identity()
     user  = User.query.filter_by(email=email).first()
     jobs  = JobPosting.query.order_by(JobPosting.created_at.desc()).all()
-    return render_template('tpo_dashboard.html', user=user, jobs=jobs)
+    announcements = Announcement.query.order_by(Announcement.created_at.desc()).all()
+    
+    # Generate Analytics
+    analytics = get_tpo_analytics()
+    
+    return render_template('tpo_dashboard.html', 
+                         user=user, 
+                         jobs=jobs, 
+                         announcements=announcements, 
+                         now=datetime.now(),
+                         analytics=analytics)
+
+def get_tpo_analytics():
+    """Generates analytics charts using Matplotlib and returns them as base64 strings."""
+    charts = {}
+    
+    try:
+        # Data preparation
+        students = Student.query.all()
+        applications = Application.query.all()
+        jobs = JobPosting.query.all()
+
+        # 1. Placement Trends (YoY)
+        # Using Batch start year as a proxy for year
+        batch_counts = {}
+        for s in students:
+            if s.job_applications:
+                if any(app.status == 'selected' for app in s.job_applications):
+                    year = s.batch.split('-')[0] if s.batch and '-' in s.batch else "Unknown"
+                    batch_counts[year] = batch_counts.get(year, 0) + 1
+        
+        if batch_counts:
+            years = sorted(batch_counts.keys())
+            counts = [batch_counts[y] for y in years]
+            plt.figure(figsize=(6, 4))
+            plt.plot(years, counts, marker='o', color='#512da8', linewidth=2)
+            plt.title('Year-over-Year Placement Growth', fontweight='bold')
+            plt.xlabel('Batch Year')
+            plt.ylabel('Students Placed')
+            plt.grid(True, linestyle='--', alpha=0.6)
+            plt.tight_layout()
+            charts['trend'] = fig_to_base64(plt.gcf())
+            plt.close()
+
+        # 2. Salary Package Distribution
+        salaries = []
+        for app in applications:
+            if app.status == 'selected' and app.job.salary_package:
+                # Try to extract numbers from salary (e.g., "8 LPA" -> 8)
+                match = re.search(r'(\d+\.?\d*)', app.job.salary_package)
+                if match:
+                    salaries.append(float(match.group(1)))
+        
+        if salaries:
+            plt.figure(figsize=(6, 4))
+            plt.hist(salaries, bins=8, color='#00c853', alpha=0.7, edgecolor='black')
+            plt.title('Salary Package Distribution (LPA)', fontweight='bold')
+            plt.xlabel('CTC in LPA')
+            plt.ylabel('No. of Students')
+            plt.tight_layout()
+            charts['salary'] = fig_to_base64(plt.gcf())
+            plt.close()
+
+        # 3. Department Performance
+        dept_placed = {}
+        dept_total = {}
+        for s in students:
+            dept = s.department or "General"
+            dept_total[dept] = dept_total.get(dept, 0) + 1
+            if any(app.status == 'selected' for app in s.job_applications):
+                dept_placed[dept] = dept_placed.get(dept, 0) + 1
+        
+        if dept_placed:
+            labels = list(dept_placed.keys())
+            # Calculate %
+            percentages = [(dept_placed[d] / dept_total[d]) * 100 for d in labels]
+            plt.figure(figsize=(6, 4))
+            plt.bar(labels, percentages, color='#2196f3', alpha=0.8)
+            plt.title('Department-wise Placement %', fontweight='bold')
+            plt.ylabel('Placement %')
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            charts['dept'] = fig_to_base64(plt.gcf())
+            plt.close()
+
+        # 4. Real-time ROI (Conversion Rate) - Top 5 recent drives
+        roi_data = []
+        for j in sorted(jobs, key=lambda x: x.created_at, reverse=True)[:5]:
+            applied = len(j.applications)
+            hired = len([a for a in j.applications if a.status == 'selected'])
+            if applied > 0:
+                roi_data.append({
+                    'name': j.company_name[:10], # Short name
+                    'conversion': (hired / applied) * 100
+                })
+        
+        if roi_data:
+            names = [d['name'] for d in roi_data]
+            conv = [d['conversion'] for d in roi_data]
+            plt.figure(figsize=(6, 4))
+            plt.barh(names, conv, color='#ff9800', alpha=0.8)
+            plt.title('Drive Conversion ROI (Applied to Hired %)', fontweight='bold')
+            plt.xlabel('Conversion Rate (%)')
+            plt.tight_layout()
+            charts['roi'] = fig_to_base64(plt.gcf())
+            plt.close()
+
+    except Exception as e:
+        print(f"Analytics Error: {str(e)}")
+    
+    return charts
+
+def fig_to_base64(fig):
+    """Converts a Matplotlib figure to a base64 encoded string."""
+    img = BytesIO()
+    fig.savefig(img, format='png', bbox_inches='tight')
+    img.seek(0)
+    return base64.b64encode(img.getvalue()).decode('utf8')
 
 
 @app.route('/track_registrations')
@@ -459,7 +641,7 @@ def track_registrations():
     email = get_jwt_identity()
     user  = User.query.filter_by(email=email).first()
     jobs  = JobPosting.query.order_by(JobPosting.created_at.desc()).all()
-    return render_template('track_registrations.html', user=user, jobs=jobs)
+    return render_template('track_registrations.html', user=user, jobs=jobs, now=datetime.now())
 
 
 @app.route('/post_job', methods=['POST'])
@@ -477,6 +659,9 @@ def post_job():
     location = request.form.get('location')
     deadline_str = request.form.get('deadline')
     form_link = request.form.get('form_link')
+    secondary_form_link = request.form.get('secondary_form_link')
+    min_cgpa = request.form.get('min_cgpa', 0.0, type=float)
+    max_backlogs = request.form.get('max_backlogs', 0, type=int)
 
     try:
         deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
@@ -489,11 +674,26 @@ def post_job():
             location=location,
             deadline=deadline,
             form_link=form_link,
+            secondary_form_link=secondary_form_link,
+            min_cgpa=min_cgpa,
+            max_backlogs=max_backlogs,
+            status='open',
             posted_by=user.id
         )
         db.session.add(new_job)
         db.session.commit()
-        flash('Job posting published successfully!', 'success')
+        
+        # Automated Notification: Alert all students about the new drive
+        students = Student.query.all()
+        student_emails = [s.email for s in students]
+        if student_emails:
+            send_email(
+                subject=f'New Recruitment Drive: {company_name} - {job_role}',
+                recipients=student_emails,
+                body=f"Hello Students,\n\nA new recruitment drive has been posted for {company_name} for the role of {job_role}.\n\nCriteria:\n- Min CGPA: {min_cgpa}\n- Max Backlogs: {max_backlogs}\n- Salary: {salary_package}\n- Deadline: {deadline_str}\n\nPlease check your dashboard to apply.\n\nBest Regards,\nTraining & Placement Cell"
+            )
+        
+        flash('Job posting published successfully and students notified!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error publishing job: {str(e)}', 'danger')
@@ -507,7 +707,8 @@ def job_applicants(job_id):
     job = JobPosting.query.get_or_404(job_id)
     # Fetch applications with joined students
     applications = Application.query.filter_by(job_id=job_id).all()
-    return render_template('job_applicants.html', job=job, applications=applications)
+    departments = sorted(list(set(app.student.department for app in applications if app.student.department)))
+    return render_template('job_applicants.html', job=job, applications=applications, departments=departments)
 
 
 @app.route('/update_application_status/<int:app_id>', methods=['POST'])
@@ -519,7 +720,16 @@ def update_application_status(app_id):
     if new_status in ['pending', 'shortlisted', 'interviewed', 'rejected', 'selected']:
         application.status = new_status
         db.session.commit()
-        flash(f'Status updated to {new_status}!', 'success')
+        
+        # Automated Notification: Alert the student about status change
+        status_colors = {'shortlisted': 'congratulations', 'rejected': 'update', 'selected': 'BIG NEW STORY'} # Internal mapping for wording
+        send_email(
+            subject=f'Placement Update: {application.job.company_name}',
+            recipients=[application.student.email],
+            body=f"Hello {application.student.name},\n\nYour application status for the position of {application.job.job_role} at {application.job.company_name} has been updated to: {new_status.upper()}.\n\nPlease log in to your dashboard for more details.\n\nBest Regards,\nTraining & Placement Cell"
+        )
+        
+        flash(f'Status updated to {new_status} and student notified!', 'success')
     else:
         flash('Invalid status provided.', 'danger')
         
@@ -542,7 +752,10 @@ def update_job_form(job_id):
             'salary_package': job.salary_package,
             'location': job.location,
             'deadline': job.deadline.strftime('%Y-%m-%dT%H:%M'),
-            'form_link': job.form_link
+            'form_link': job.form_link,
+            'secondary_form_link': job.secondary_form_link,
+            'min_cgpa': job.min_cgpa,
+            'max_backlogs': job.max_backlogs
         }
 
     # Extract all fields from the form
@@ -554,17 +767,22 @@ def update_job_form(job_id):
     location = request.form.get('location')
     deadline_str = request.form.get('deadline')
     form_link = request.form.get('form_link')
+    secondary_form_link = request.form.get('secondary_form_link')
+    min_cgpa = request.form.get('min_cgpa', 0.0, type=float)
+    max_backlogs = request.form.get('max_backlogs', 0, type=int)
     
     try:
         job.company_name = company_name
         job.job_role = job_role
         job.job_description = job_description
         job.eligibility_criteria = eligibility_criteria
-        job.department = department
         job.location = location
+        job.min_cgpa = min_cgpa
+        job.max_backlogs = max_backlogs
         if deadline_str:
             job.deadline = datetime.strptime(deadline_str, '%Y-%m-%dT%H:%M')
         job.form_link = form_link
+        job.secondary_form_link = secondary_form_link
         
         db.session.commit()
         flash(f'Placement drive for {job.company_name} updated successfully!', 'success')
@@ -684,6 +902,81 @@ def change_password():
         
     # Redirect back to the referrer or dashboard
     return redirect(request.referrer or url_for('home'))
+
+
+@app.route('/submit_secondary_data/<int:job_id>', methods=['POST'])
+@login_required(roles=['student'])
+def submit_secondary_data(job_id):
+    claims = get_jwt()
+    regno = claims.get('regno')
+    student = Student.query.filter_by(regno=regno).first()
+    
+    if not student:
+        flash('Student record not found.', 'danger')
+        return redirect(url_for('student_dashboard'))
+    
+    application = Application.query.filter_by(job_id=job_id, student_id=student.id).first()
+    if not application:
+        flash('You must apply to the primary link first.', 'warning')
+        return redirect(url_for('student_dashboard'))
+    
+    secondary_data = request.form.get('secondary_data')
+    if secondary_data:
+        application.secondary_data = secondary_data
+        db.session.commit()
+        
+        # Check if there is a secondary link to redirect to
+        job = JobPosting.query.get(job_id)
+        if job and job.secondary_form_link:
+            clean_link = job.secondary_form_link.strip()
+            target_url = clean_link if clean_link.startswith(('http://', 'https://')) else 'https://' + clean_link
+            flash('External application ID saved! Redirecting to the next procedure...', 'success')
+            return redirect(target_url)
+        
+        flash('Secondary application data saved successfully!', 'success')
+    else:
+        flash('Please fill in the required details.', 'warning')
+        
+    return redirect(url_for('student_dashboard'))
+
+
+# ─── Notice Board Routes ─────────────────────────────────────────────────────
+
+@app.route('/post_announcement', methods=['POST'])
+@login_required(roles=['tpo'])
+def post_announcement():
+    email = get_jwt_identity()
+    user = User.query.filter_by(email=email).first()
+    
+    title = request.form.get('title')
+    content = request.form.get('content')
+    category = request.form.get('category', 'general')
+    
+    try:
+        new_note = Announcement(
+            title=title,
+            content=content,
+            category=category,
+            posted_by=user.id
+        )
+        db.session.add(new_note)
+        db.session.commit()
+        flash('Announcement posted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error posting announcement: {str(e)}', 'danger')
+        
+    return redirect(url_for('tpo_dashboard'))
+
+
+@app.route('/delete_announcement/<int:id>', methods=['POST'])
+@login_required(roles=['tpo'])
+def delete_announcement(id):
+    note = Announcement.query.get_or_404(id)
+    db.session.delete(note)
+    db.session.commit()
+    flash('Announcement removed.', 'info')
+    return redirect(url_for('tpo_dashboard'))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
