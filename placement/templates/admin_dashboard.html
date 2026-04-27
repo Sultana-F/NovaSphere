@@ -1,12 +1,553 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Novasphere | Principal Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{url_for('static',filename='admin_dashboard.css')}}">
+
 </head>
+
 <body>
-    welcome{{username}}
-    <p>this is admin page</p>
+
+    <aside class="sidebar-desktop d-flex flex-column">
+        <div class="p-4 d-flex align-items-center gap-3">
+            <div class="bg-primary p-2 rounded-3 text-white shadow-sm">
+                <i class="bi bi-rocket-takeoff-fill"></i>
+            </div>
+            <h5 class="mb-0 fw-bold">Novasphere</h5>
+        </div>
+
+        <div class="flex-grow-1">
+            <p class="section-label">Main Menu</p>
+            <div class="nav flex-column nav-tabs border-0" id="sidebar-nav" role="tablist" aria-orientation="vertical">
+
+                <a class="nav-link active sidebar-tab" id="v-pills-dash-tab" data-bs-toggle="tab" data-bs-target="#v-pills-dash"
+                    href="#v-pills-dash" role="tab" aria-selected="true">
+                    <i class="bi bi-grid-1x2"></i> Dashboard
+                </a>
+
+                <a class="nav-link sidebar-tab" id="v-pills-dept-tab" data-bs-toggle="tab" data-bs-target="#v-pills-dept" href="#v-pills-dept"
+                    role="tab" aria-selected="false">
+                    <i class="bi bi-building"></i> Departments
+                </a>
+
+                <a class="nav-link sidebar-tab" id="v-pills-students-tab" data-bs-toggle="tab" data-bs-target="#v-pills-students"
+                    href="#v-pills-students" role="tab" aria-selected="false">
+                    <i class="bi bi-people"></i> Students
+                </a>
+
+                <p class="section-label">Administration</p>
+
+                <!-- Staff Management -->
+                <a class="nav-link w-100 border-0 bg-transparent text-start d-flex align-items-center justify-content-between text-decoration-none parent-nav-link" 
+                    href="#staffCollapse" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="staffCollapse">
+                    <span class="d-flex align-items-center gap-3">
+                        <i class="bi bi-person-badge"></i> Staff Management
+                    </span>
+                    <i class="bi bi-chevron-down toggle-icon small"></i>
+                </a>
+                <div class="collapse" id="staffCollapse" data-bs-parent="#sidebar-nav">
+                    <a class="nav-link sub-link sidebar-tab" data-bs-toggle="tab" data-bs-target="#v-pills-tpo" role="tab" aria-controls="v-pills-tpo"
+                        href="#v-pills-tpo">TPO Management</a>
+                    <a class="nav-link sub-link sidebar-tab" data-bs-toggle="tab" data-bs-target="#v-pills-hod" role="tab" aria-controls="v-pills-hod"
+                        href="#v-pills-hod">HOD Management</a>
+                </div>
+
+                <!-- Settings -->
+                <a class="nav-link w-100 border-0 bg-transparent text-start d-flex align-items-center justify-content-between text-decoration-none parent-nav-link" 
+                    href="#settingsCollapse" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="settingsCollapse">
+                    <span class="d-flex align-items-center gap-3">
+                        <i class="bi bi-gear"></i> Settings
+                    </span>
+                    <i class="bi bi-chevron-down toggle-icon small"></i>
+                </a>
+                <div class="collapse" id="settingsCollapse" data-bs-parent="#sidebar-nav">
+                    <a class="nav-link sub-link sidebar-tab" data-bs-toggle="tab" data-bs-target="#v-pills-profileprincipal" role="tab" aria-controls="v-pills-profileprincipal"
+                        href="#v-pills-profileprincipal">Profile</a>
+                    <a class="nav-link sub-link sidebar-tab" data-bs-toggle="tab" data-bs-target="#v-pills-changepassword" role="tab" aria-controls="v-pills-changepassword"
+                        href="#v-pills-changepassword">Change Password</a>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="p-4 mt-auto border-top">
+            <div class="d-grid gap-2">
+
+                <a class="btn btn-danger btn-sm" href="#">
+                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="navbar bg-white border-bottom px-4 py-2 sticky-top d-flex">
+            <div class="container-fluid d-flex justify-content-between">
+                <span class="badge bg-light text-primary border border-primary-subtle px-3 py-2">AY 2024-2025</span>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-end">
+                        <p class="small fw-bold mb-0">Dr. Robert Wilson</p>
+                        <p class="text-muted mb-0" style="font-size: 10px;">Principal</p>
+                    </div>
+                    <img src="https://ui-avatars.com/api/?name=RW&background=4f46e5&color=fff" class="rounded-circle"
+                        width="36">
+                </div>
+            </div>
+        </header>
+
+        <main class="p-4">
+            <div class="tab-content" id="v-pills-tabContent">
+
+                <div class="tab-pane fade show active" id="v-pills-dash" role="tabpanel">
+                    <h3 class="fw-bold mb-4">Executive Overview</h3>
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="text-primary mb-2"><i class="bi bi-people-fill fs-4"></i></div>
+                                <h6 class="text-muted">Total Batch</h6>
+                                <h3 class="fw-bold">1,240</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="text-success mb-2"><i class="bi bi-check-circle-fill fs-4"></i></div>
+                                <h6 class="text-muted">Placed</h6>
+                                <h3 class="fw-bold">765</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <div class="text-warning mb-2"><i class="bi bi-cash-stack fs-4"></i></div>
+                                <h6 class="text-muted">Avg. Package</h6>
+                                <h3 class="fw-bold">6.4 LPA</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="v-pills-dept" role="tabpanel">
+                    <h3 class="fw-bold">Department Management</h3>
+                    <p class="text-muted"></p>
+                    <label for="department">All Department:</label>
+                    <select id="department" name="department">
+                        <option value="">Select Department</option>
+                        <option value="bcom">BCom</option>
+                        <option value="bca">BCA</option>
+                        <option value="bba">BBA</option>
+                        <option value="bsc">BSC</option>
+                    </select>
+
+                    <div class="mt-3">
+                        <label for="batch">Batch:</label>
+                        <select id="batch" name="batch">
+                            <option value="">Select Batch</option>
+                            <option value="2023">2023</option>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="v-pills-students" role="tabpanel">
+                    <h3 class="fw-bold">Student Directory</h3>
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-8">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white fw-semibold">Recently Placed Students</div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0 align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Reg No</th>
+                                                <th>Department</th>
+                                                <th>Company</th>
+                                                <th>Package</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for s in recent_students %}
+                                            <tr>
+                                                <td>{{ s.name }}</td>
+                                                <td>{{ s.reg_no }}</td>
+                                                <td>{{ s.department }}</td>
+                                                <td>{{ s.company }}</td>
+                                                <td>₹ {{ s.package }} LPA</td>
+                                                <td>{{ s.placed_date }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                            {% if not recent_students %}
+
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TPO Management Section -->
+                <div class="tab-pane fade" id="v-pills-tpo" role="tabpanel">
+                    <h3 class="fw-bold">TPO Management</h3>
+                    <p class="text-muted">Overview and management of Training and Placement Officers.</p>
+
+                    <div class="card shadow-sm border-0 mt-4">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <h6 class="mb-0 fw-bold">TPO Directory</h6>
+                            <button class="btn btn-primary btn-sm rounded-2" data-bs-toggle="modal"
+                                data-bs-target="#addTpoModal">
+                                <i class="bi bi-person-plus me-1"></i> Add TPO
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Name</th>
+                                        <th>Experience</th>
+                                        <th>Drives Handled</th>
+                                        <th>Status</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="https://ui-avatars.com/api/?name=Sarah+Johnson&background=random"
+                                                    class="rounded-circle" width="32">
+                                                <span class="fw-medium">Sarah Johnson</span>
+                                            </div>
+                                        </td>
+                                        <td>8 Years</td>
+                                        <td>15 Active</td>
+                                        <td><span
+                                                class="badge bg-success-subtle text-success border border-success-subtle px-2">Active</span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-light btn-sm border" data-bs-toggle="modal"
+                                                data-bs-target="#editTpoModal"><i
+                                                    class="bi bi-pencil-square"></i></button>
+                                            <button class="btn btn-light btn-sm border text-danger"><i
+                                                    class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HOD Management Section -->
+                <div class="tab-pane fade" id="v-pills-hod" role="tabpanel">
+                    <h3 class="fw-bold">HOD Management</h3>
+                    <p class="text-muted">Manage Department Heads and academic leadership roles.</p>
+
+                    <div class="card shadow-sm border-0 mt-4">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                            <h6 class="mb-0 fw-bold">HOD Directory</h6>
+                            <button class="btn btn-primary btn-sm rounded-2" data-bs-toggle="modal"
+                                data-bs-target="#addHodModal">
+                                <i class="bi bi-person-plus me-1"></i> Add HOD
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Name</th>
+                                        <th>Department</th>
+                                        <th>Tenure</th>
+                                        <th>Status</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="https://ui-avatars.com/api/?name=Dr+Mark+Stevens&background=4f46e5&color=fff"
+                                                    class="rounded-circle" width="32">
+                                                <span class="fw-medium">Dr. Mark Stevens</span>
+                                            </div>
+                                        </td>
+                                        <td>Computer Science</td>
+                                        <td>3 Years</td>
+                                        <td><span
+                                                class="badge bg-success-subtle text-success border border-success-subtle px-2">Active</span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-light btn-sm border" data-bs-toggle="modal"
+                                                data-bs-target="#editHodModal"><i
+                                                    class="bi bi-pencil-square"></i></button>
+                                            <button class="btn btn-light btn-sm border text-danger"><i
+                                                    class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Profile Section -->
+                <div class="tab-pane fade" id="v-pills-profileprincipal" role="tabpanel">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 70vh;">
+                        <div class="w-100" style="max-width: 600px;">
+                            <h3 class="fw-bold mb-4 text-center">Principal Profile</h3>
+                            <div class="card border-0 shadow-sm p-4 rounded-4">
+                                <div class="d-flex align-items-center gap-4 mb-4">
+                                    <img src="https://ui-avatars.com/api/?name=RW&background=4f46e5&color=fff"
+                                        class="rounded-circle border border-2 border-primary-subtle" width="100">
+                                    <div>
+                                        <h4 class="fw-bold mb-1">Dr. Robert Wilson</h4>
+                                        <p class="text-muted mb-0">Principal, Novasphere Institute</p>
+                                    </div>
+                                </div>
+                                <form id="principalProfileForm">
+                                    <div class="row g-3 d-none" id="profileEditFields">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Full Name</label>
+                                            <input type="text" class="form-control py-2" value="Dr. Robert Wilson">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold">Email</label>
+                                            <input type="email" class="form-control py-2" value="robert.wilson@novasphere.edu">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label fw-semibold">Phone</label>
+                                            <input type="text" class="form-control py-2" value="+1 234 567 890">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary w-100 py-2 fw-bold mt-4 shadow-sm" id="btnEditTrigger" onclick="enableProfileEdit()">Update Profile</button>
+                                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold mt-4 shadow-sm d-none" id="btnSaveProfile">Save Changes</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Change Password Section -->
+                <div class="tab-pane fade" id="v-pills-changepassword" role="tabpanel">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh;">
+                        <div class="w-100" style="max-width: 480px;">
+                            <h3 class="fw-bold mb-4 text-center">Change Password</h3>
+                            <div class="card border-0 shadow p-4 rounded-4">
+                                <form>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Current Password</label>
+                                        <input type="password" class="form-control py-2" placeholder="Enter current password">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">New Password</label>
+                                        <input type="password" class="form-control py-2" placeholder="Enter new password">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Confirm New Password</label>
+                                        <input type="password" class="form-control py-2" placeholder="Confirm new password">
+                                    </div>
+                                    <button class="btn btn-primary w-100 py-2 fw-bold mt-2 shadow-sm">Update Password</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!--end of password section-->
+            </div> 
+        </main>
+    </div>
+
+
+    <!-- Add TPO Modal -->
+    <div class="modal fade" id="addTpoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="fw-bold">Add Training & Placement Officer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" class="form-control fs-6" placeholder="Enter name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Gender</label>
+                            <select class="form-select fs-6">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input type="email" class="form-control fs-6" placeholder="email@example.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Phone</label>
+                                <input type="tel" class="form-control fs-6" placeholder="Phone number" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Address</label>
+                            <textarea class="form-control fs-6" rows="2" placeholder="Full address"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Password</label>
+                            <input type="password" class="form-control fs-6" placeholder="Create password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Save TPO</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit TPO Modal -->
+    <div class="modal fade" id="editTpoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="fw-bold">Modify TPO Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" class="form-control fs-6" value="Sarah Johnson" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Gender</label>
+                            <select class="form-select fs-6">
+                                <option value="female" selected>Female</option>
+                                <option value="male">Male</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input type="email" class="form-control fs-6" value="sarah.j@example.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Phone</label>
+                                <input type="tel" class="form-control fs-6" value="+123456789" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Address</label>
+                            <textarea class="form-control fs-6" rows="2">123 Campus Dr, Main Hall</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Update TPO Details</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add HOD Modal -->
+    <div class="modal fade" id="addHodModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="fw-bold">Add Department Head (HOD)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" class="form-control fs-6" placeholder="Enter name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Gender</label>
+                            <select class="form-select fs-6">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input type="email" class="form-control fs-6" placeholder="hod@example.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Phone</label>
+                                <input type="tel" class="form-control fs-6" placeholder="Phone number" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Address</label>
+                            <textarea class="form-control fs-6" rows="2" placeholder="Full address"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Password</label>
+                            <input type="password" class="form-control fs-6" placeholder="Create password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Save HOD</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit HOD Modal -->
+    <div class="modal fade" id="editHodModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pt-4 px-4">
+                    <h5 class="fw-bold">Modify HOD Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" class="form-control fs-6" value="Dr. Mark Stevens" required>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input type="email" class="form-control fs-6" value="m.stevens@example.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Phone</label>
+                                <input type="tel" class="form-control fs-6" value="+198765432" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Address</label>
+                            <textarea class="form-control fs-6" rows="2">Academic Block A, HOD Office</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Update HOD Details</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function enableProfileEdit() {
+            document.getElementById('profileEditFields').classList.remove('d-none');
+            document.getElementById('btnSaveProfile').classList.remove('d-none');
+            document.getElementById('btnEditTrigger').classList.add('d-none');
+        }
+    </script>
 </body>
+
 </html>

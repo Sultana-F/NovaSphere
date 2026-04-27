@@ -1,0 +1,142 @@
+:root {
+    /* Primary */
+    --primary: #512da8;
+    --primary-light: #5c6bc0;
+    --primary-dark: #3f1d8a;
+
+    /* Background */
+    --bg-main: #f5f7ff;
+    --bg-gradient: linear-gradient(to right, #e2e2e2, #c9d6ff);
+    --card-bg: #ffffff;
+
+    /* Text */
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-light: #ffffff;
+
+    /* UI */
+    --input-bg: #eeeeee;
+    --border-color: #cccccc;
+    --shadow: rgba(0, 0, 0, 0.15);
+
+    /* Status */
+    --success: #4caf50;
+    --error: #f44336;
+    --warning: #ff9800;
+    --info: #2196f3;
+
+    /* Font */
+    --font-main: sans-serif;
+
+    /* Layout */
+    --sidebar-width: 260px;
+}
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+        }
+
+        .sidebar-desktop {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar-desktop {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* Nav Link Overrides for Tabs */
+        .nav-tabs .nav-link {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.8rem 1.25rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 4px 15px;
+            border: 1px solid transparent;
+            background: none;
+            width: calc(100% - 30px);
+            text-align: left;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.95rem;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background-color: var(--bg-main);
+            color: var(--primary);
+            transform: translateX(4px);
+            border-color: var(--border-color);
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--primary);
+            color: var(--text-light);
+            border-color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Toggle Icon Rotation */
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        .nav-link[aria-expanded="true"] .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Refined Sub-links */
+        .sub-link {
+            font-size: 0.875rem;
+            padding: 0.6rem 1rem 0.6rem 3.5rem; /* Better Indentation */
+            margin: 2px 15px;
+            width: calc(100% - 30px);
+            color: var(--text-secondary);
+        }
+        .sub-link:hover, .sub-link.active {
+            background-color: var(--input-bg);
+            transform: none;
+            color: var(--primary);
+        }
+
+        /* Keep parent category highlighted if a child is active */
+        .parent-nav-link:has(+ .collapse .sub-link.active) {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            color: var(--text-secondary);
+            padding: 1.5rem 1.5rem 0.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px var(--shadow);
+        }
