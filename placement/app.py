@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from models import db, User, Role, LoginDetail, Student, JobPosting, Application, Announcement
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from models import db, User, Role, LoginDetail, Student, JobPosting, Application, Announcement, ValidateStudent, ApprovedStaff
 from flask_jwt_extended import (
     create_access_token, jwt_required, get_jwt_identity,
     get_jti, JWTManager, set_access_cookies, unset_jwt_cookies, decode_token,get_jwt
 )
+
 
 from functools import wraps
 from flask_bcrypt import Bcrypt
@@ -46,6 +47,22 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('EMAIL_USER')
 
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+@app.template_filter('gravatar')
+def gravatar_filter(email):
+    return f"https://ui-avatars.com/api/?name={email.split('@')[0].replace('.',' ')}&size=100&background=512da8&color=fff"
+
+# Configure Upload Folder
+UPLOAD_FOLDER = 'static/uploads/profiles'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Token revocation blacklist
 blacklist = set()
@@ -282,6 +299,14 @@ def register_student():
     tenth_percent=request.form.get('tenth_percent','').strip()
     twelfth_percent=request.form.get('twelfth_percent','').strip()
     password = request.form.get('password', '').strip() # Get password from form input
+
+    #vaildate regno from vaildatestudent table
+    validate_student = ValidateStudent.query.filter_by(regno=regno).first()
+    if validate_student:
+        regno_in_validate = validate_student.regno
+        if regno != regno_in_validate:
+            flash('Registration number does not match our records. Please contact administration.', 'danger')
+            return redirect(url_for('register'))
     
     
     #validate registration number format  using regex where U is fixed, 16 is year of admission, NB is department code, 23 is batch year, S  is fixed and 0120 is unique number
@@ -290,7 +315,7 @@ def register_student():
     if not re.fullmatch(batch_year_pattern, batch):
         flash('Invalid batch format. Please follow the format: 2022-25', 'danger')
     #validate batch year matches regno year
-    batch_year = batch.split('-')[1]  # Get the last two digits of the batch year
+    batch_year = batch[2:4]           # Get the last two digits of the batch year
     regno_year = regno[5:7]           # Get the year part from the registration number
     if batch_year != regno_year:    
         flash('Batch year does not match registration number year.', 'danger')
@@ -357,6 +382,40 @@ def register_student():
 
 
 
+# ─── API Endpoints ───────────────────────────────────────────────────────────
+
+@app.route('/api/department_stats')
+@login_required(roles=['principal'])
+def get_department_stats():
+    dept = request.args.get('dept')
+    batch = request.args.get('batch')
+    
+    if not dept or not batch:
+        return jsonify([])
+
+    # Query students matching dept and batch (batch check uses contains for flexibility)
+    students = Student.query.filter(Student.department == dept, Student.batch.contains(batch)).all()
+    
+    data = []
+    for s in students:
+        # Check if student is placed (has a 'selected' application)
+        placement = Application.query.filter_by(student_id=s.id, status='selected').first()
+        
+        status = "Placed" if placement else "Not Placed"
+        company = placement.job.company_name if placement else "N/A"
+        package = placement.job.salary_package if placement else "N/A"
+        
+        data.append({
+            'name': s.name,
+            'regno': s.regno,
+            'status': status,
+            'company': company,
+            'package': package
+        })
+        
+    return jsonify(data)
+
+
 # ─── Logout ──────────────────────────────────────────────────────────────────
 @app.route('/logout')
 def logout():
@@ -366,11 +425,194 @@ def logout():
 
 
 # ─── Dashboards ──────────────────────────────────────────────────────────────
-
+#28-04-2026
 @app.route('/admin_dashboard')
 @login_required(roles=['principal'])
 def admin():
-    return render_template('admin_dashboard.html')
+    email = get_jwt_identity()
+    user = User.query.filter_by(email=email).first()
+    
+    # 1. Dashboard Stats
+    total_students = Student.query.count()
+    placed_students = db.session.query(Application.student_id).filter(Application.status == 'selected').distinct().count()
+    
+    # Calculate Average Package
+    selected_apps = Application.query.filter_by(status='selected').all()
+    total_package = 0
+    count_package = 0
+    for app in selected_apps:
+        if app.job.salary_package:
+            # Extract number from string like "8 LPA"
+            match = re.search(r'(\d+\.?\d*)', app.job.salary_package)
+            if match:
+                total_package += float(match.group(1))
+                count_package += 1
+    
+    avg_package = round(total_package / count_package, 2) if count_package > 0 else 0
+    
+    # 2. Student Directory (Recently Placed)
+    # Joining Application and Student to get placed students
+    recent_placed = db.session.query(Student, Application, JobPosting).\
+        join(Application, Student.id == Application.student_id).\
+        join(JobPosting, Application.job_id == JobPosting.id).\
+        filter(Application.status == 'selected').\
+        order_by(Application.applied_at.desc()).limit(10).all()
+    
+    placed_data = []
+    for s, a, j in recent_placed:
+        placed_data.append({
+            'name': s.name,
+            'reg_no': s.regno,
+            'department': s.department,
+            'company': j.company_name,
+            'package': j.salary_package,
+            'placed_date': a.applied_at.strftime('%d %b, %Y')
+        })
+
+    # 3. TPO Management
+    tpos = ApprovedStaff.query.filter_by(role='tpo').all()
+    
+    # 4. HOD Management
+    hods = ApprovedStaff.query.filter_by(role='hod').all()
+
+    return render_template('admin_dashboard.html', 
+                         user=user, 
+                         total_students=total_students,
+                         placed_count=placed_students,
+                         avg_package=avg_package,
+                         students=placed_data,
+                         tpos=tpos,
+                         hods=hods)
+
+
+@app.route('/add_staff', methods=['POST'])
+@login_required(roles=['principal'])
+def add_staff():
+    name = request.form.get('fullname')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    role = request.form.get('role') # 'tpo' or 'hod'
+   
+    
+    if User.query.filter_by(email=email).first():
+        flash('Email already exists.', 'danger')
+        return redirect(url_for('admin'))
+        
+    try:
+        # 1. Create User with default password
+        default_password = bcrypt.generate_password_hash('admin123').decode('utf-8')
+        new_user = User(
+            full_name=name,
+            email=email,
+            password=default_password,
+            role=role,
+            phone=phone
+        )
+        db.session.add(new_user)
+        db.session.flush() # Get ID
+        
+        # 2. Create ApprovedStaff
+        new_staff = ApprovedStaff(
+            user_id=new_user.id,
+            name=name,
+            email=email,
+            phone=phone,
+            role=role
+        )
+        db.session.add(new_staff)
+        db.session.commit()
+        flash(f'{role.upper()} added successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error adding staff: {str(e)}', 'danger')
+        
+    return redirect(url_for('admin'))
+
+
+@app.route('/edit_staff/<int:id>', methods=['POST'])
+@login_required(roles=['principal'])
+def edit_staff(id):
+    # 'id' here refers to the User ID (passed from the updated frontend)
+    user = User.query.get_or_404(id)
+    user.full_name = request.form.get('fullname')
+    user.email = request.form.get('email')
+    user.phone = request.form.get('phone')
+    
+    # Sync with ApprovedStaff record if it exists
+    if user.approved_staff_profile:
+        user.approved_staff_profile.name = user.full_name
+        user.approved_staff_profile.email = user.email
+        user.approved_staff_profile.phone = user.phone
+    
+    try:
+        # Update User
+        user.full_name = request.form.get('fullname')
+        user.email = request.form.get('email')
+        user.phone = request.form.get('phone')
+        
+        # Update ApprovedStaff
+        staff = ApprovedStaff.query.filter_by(user_id=id).first()
+        if staff:
+            staff.name = user.full_name
+            staff.email = user.email
+            staff.phone = user.phone
+            
+        db.session.commit()
+        flash('Staff details updated!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating staff: {str(e)}', 'danger')
+        
+    return redirect(url_for('admin'))
+
+
+@app.route('/delete_staff/<int:id>')
+@login_required(roles=['principal'])
+def delete_staff(id):
+    user = User.query.get_or_404(id)
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash('Staff removed successfully.', 'info')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting staff: {str(e)}', 'danger')
+        
+    return redirect(url_for('admin'))
+
+
+@app.route('/update_profile', methods=['POST'])
+@login_required(roles=['principal', 'tpo', 'hod', 'student'])
+def update_profile():
+    email_identity = get_jwt_identity()
+    user = User.query.filter_by(email=email_identity).first()
+    
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('home'))
+
+    user.full_name = request.form.get('fullname')
+    user.email = request.form.get('email')
+    user.phone = request.form.get('phone')
+    
+    # Handle Profile Photo Upload
+    if 'profile_photo' in request.files:
+        file = request.files['profile_photo']
+        if file and file.filename != '' and allowed_file(file.filename):
+            from werkzeug.utils import secure_filename
+            # Create unique filename using user ID
+            filename = secure_filename(f"profile_{user.id}_{file.filename}")
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            user.avatar = filename # Store filename in avatar column
+    
+    try:
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating profile: {str(e)}', 'danger')
+        
+    return redirect(request.referrer or url_for('home'))
 
 
 @app.route('/student_dashboard')
@@ -516,30 +758,49 @@ def tpo_dashboard():
     jobs  = JobPosting.query.order_by(JobPosting.created_at.desc()).all()
     announcements = Announcement.query.order_by(Announcement.created_at.desc()).all()
     
+    # Get batch filter from query params
+    selected_batch = request.args.get('batch', 'All')
+    
+    # Get all unique batches for the filter dropdown
+    batches = db.session.query(Student.batch).distinct().all()
+    batch_list = sorted([b[0] for b in batches if b[0]])
+
     # Generate Analytics
-    analytics = get_tpo_analytics()
+    analytics = get_tpo_analytics(selected_batch)
     
     return render_template('tpo_dashboard.html', 
                          user=user, 
                          jobs=jobs, 
                          announcements=announcements, 
                          now=datetime.now(),
-                         analytics=analytics)
+                         analytics=analytics,
+                         batches=batch_list,
+                         selected_batch=selected_batch)
 
-def get_tpo_analytics():
+def get_tpo_analytics(selected_batch='All'):
     """Generates analytics charts using Matplotlib and returns them as base64 strings."""
     charts = {}
     
     try:
         # Data preparation
-        students = Student.query.all()
-        applications = Application.query.all()
+        if selected_batch == 'All':
+            students = Student.query.all()
+            applications = Application.query.all()
+        else:
+            students = Student.query.filter_by(batch=selected_batch).all()
+            # Join with Student to filter applications by batch
+            applications = Application.query.join(Student).filter(Student.batch == selected_batch).all()
+            
         jobs = JobPosting.query.all()
 
         # 1. Placement Trends (YoY)
-        # Using Batch start year as a proxy for year
+        # We always use all students for the trend chart to show historical growth
+        # unless you want to see progress within a single batch year. 
+        # For better UX, we'll keep this as Historical even when a batch is selected,
+        # but you can toggle this logic.
+        trend_students = Student.query.all()
         batch_counts = {}
-        for s in students:
+        for s in trend_students:
             if s.job_applications:
                 if any(app.status == 'selected' for app in s.job_applications):
                     year = s.batch.split('-')[0] if s.batch and '-' in s.batch else "Unknown"
@@ -558,11 +819,10 @@ def get_tpo_analytics():
             charts['trend'] = fig_to_base64(plt.gcf())
             plt.close()
 
-        # 2. Salary Package Distribution
+        # 2. Salary Package Distribution (Filtered by Batch)
         salaries = []
         for app in applications:
             if app.status == 'selected' and app.job.salary_package:
-                # Try to extract numbers from salary (e.g., "8 LPA" -> 8)
                 match = re.search(r'(\d+\.?\d*)', app.job.salary_package)
                 if match:
                     salaries.append(float(match.group(1)))
@@ -570,14 +830,14 @@ def get_tpo_analytics():
         if salaries:
             plt.figure(figsize=(6, 4))
             plt.hist(salaries, bins=8, color='#00c853', alpha=0.7, edgecolor='black')
-            plt.title('Salary Package Distribution (LPA)', fontweight='bold')
+            plt.title(f'Salary Distribution (Batch: {selected_batch})', fontweight='bold')
             plt.xlabel('CTC in LPA')
             plt.ylabel('No. of Students')
             plt.tight_layout()
             charts['salary'] = fig_to_base64(plt.gcf())
             plt.close()
 
-        # 3. Department Performance
+        # 3. Department Performance (Filtered by Batch)
         dept_placed = {}
         dept_total = {}
         for s in students:
@@ -588,25 +848,30 @@ def get_tpo_analytics():
         
         if dept_placed:
             labels = list(dept_placed.keys())
-            # Calculate %
             percentages = [(dept_placed[d] / dept_total[d]) * 100 for d in labels]
             plt.figure(figsize=(6, 4))
             plt.bar(labels, percentages, color='#2196f3', alpha=0.8)
-            plt.title('Department-wise Placement %', fontweight='bold')
+            plt.title(f'Dept Performance % (Batch: {selected_batch})', fontweight='bold')
             plt.ylabel('Placement %')
             plt.xticks(rotation=45)
             plt.tight_layout()
             charts['dept'] = fig_to_base64(plt.gcf())
             plt.close()
 
-        # 4. Real-time ROI (Conversion Rate) - Top 5 recent drives
+        # 4. Real-time ROI (Conversion Rate) - Top 5 recent drives (Filtered by Batch)
         roi_data = []
         for j in sorted(jobs, key=lambda x: x.created_at, reverse=True)[:5]:
-            applied = len(j.applications)
-            hired = len([a for a in j.applications if a.status == 'selected'])
+            # Filter applications for this job by the selected batch
+            if selected_batch == 'All':
+                apps_in_job = j.applications
+            else:
+                apps_in_job = [a for a in j.applications if a.student.batch == selected_batch]
+                
+            applied = len(apps_in_job)
+            hired = len([a for a in apps_in_job if a.status == 'selected'])
             if applied > 0:
                 roi_data.append({
-                    'name': j.company_name[:10], # Short name
+                    'name': j.company_name[:10],
                     'conversion': (hired / applied) * 100
                 })
         
@@ -615,7 +880,7 @@ def get_tpo_analytics():
             conv = [d['conversion'] for d in roi_data]
             plt.figure(figsize=(6, 4))
             plt.barh(names, conv, color='#ff9800', alpha=0.8)
-            plt.title('Drive Conversion ROI (Applied to Hired %)', fontweight='bold')
+            plt.title(f'Drive ROI % (Batch: {selected_batch})', fontweight='bold')
             plt.xlabel('Conversion Rate (%)')
             plt.tight_layout()
             charts['roi'] = fig_to_base64(plt.gcf())

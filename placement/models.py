@@ -150,6 +150,14 @@ class Application(db.Model):
     job = db.relationship('JobPosting', back_populates='applications')
     student = db.relationship('Student', backref='job_applications') # Backref to access all applications of a student
 
+
+
+class ValidateStudent(db.Model):
+    __tablename__ = 'validatestudent'
+    id = db.Column(db.Integer, primary_key=True)
+    regno = db.Column(db.VARCHAR(12), nullable=True, unique=True)
+    phone = db.Column(db.String(15), nullable=False)
+
 # ─── Announcement Model (Notice Board) ───────────────────────────────────────
 
 class Announcement(db.Model):
@@ -166,3 +174,16 @@ class Announcement(db.Model):
 
 # Update JobPosting model to include the back_populates
 JobPosting.applications = db.relationship('Application', back_populates='job', cascade="all, delete-orphan")
+
+# ─── Approved Staff Model ──────────────────────────────────────────────────────
+class ApprovedStaff(db.Model):
+    __tablename__ = 'approved_staff'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(15))
+    role = db.Column(db.String(20), nullable=False) # 'tpo' or 'hod'
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    user = db.relationship('User', backref=db.backref('approved_staff_profile', uselist=False, cascade='all, delete-orphan'))
+
