@@ -1,0 +1,54 @@
+<!-- Floating Chatbot Toggle Bubble -->
+<div id="chatbot-bubble" class="chatbot-bubble" onclick="toggleChat()">
+    <i class="fas fa-comment-dots"></i>
+</div>
+
+<!-- Chat Window -->
+<div id="chatbot-window" class="chatbot-window d-none">
+    <div class="chatbot-header">
+        <div class="d-flex align-items-center gap-2">
+            <div class="chatbot-status-dot"></div>
+            <span class="fw-bold">NovaSphere Assistant</span>
+        </div>
+        <button onclick="toggleChat()" class="btn-close btn-close-white btn-sm"></button>
+    </div>
+    <div class="chatbot-body" id="chatbot-messages">
+        <div class="chat-msg bot">
+            Hello! How can I assist you with the placement portal today?
+        </div>
+    </div>
+    <div class="chatbot-footer">
+        <div class="input-group">
+            <input type="text" id="chat-input" class="form-control form-control-sm" placeholder="Type a message...">
+            <button class="btn btn-primary btn-sm" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}">
+
+<script>
+    function toggleChat() {
+        const window = document.getElementById('chatbot-window');
+        window.classList.toggle('d-none');
+        window.classList.toggle('animate-fade-up');
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const msg = input.value.trim();
+        if (msg) {
+            const container = document.getElementById('chatbot-messages');
+            container.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+            // Add dummy response
+            setTimeout(() => {
+                container.innerHTML += `<div class="chat-msg bot">Thanks for reaching out! A placement coordinator will get back to you shortly.</div>`;
+                container.scrollTop = container.scrollHeight;
+            }, 1000);
+        }
+    }
+</script>

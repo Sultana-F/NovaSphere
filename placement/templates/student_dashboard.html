@@ -1,31 +1,792 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - BCA Portal</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-   
+    <title>Student Dashboard - NOVA SPHERE</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{url_for('static',filename='student_dashboard.css')}}">
 </head>
+
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-custom px-4">
-    <span class="navbar-brand">🎓 BCA Student Portal</span>
-    <div class="ms-auto d-flex align-items-center gap-3">
-        <span class="navbar-text">Welcome, {{ student.name }}</span>
-        <a href="/logout" class="btn btn-sm btn-dark">Logout</a>
-    </div>
-</nav>
+    <!-- SIDEBAR -->
+    <div class="sidebar-wrapper">
+        <!-- Brand -->
+        <div class="brand-section">
+            <span class="brand-text">
+               NOVA SPHERE
+            </span>
+        </div>
 
-<div class="container mt-4">
-    <div class="welcome-card">
-        <h4 class="fw-bold mb-1">Hello, {{ student.name }} 👋</h4>
-        <p class="mb-2" style="opacity:0.75">Here's your profile overview</p>
-        <span class="info-badge">Reg No: {{ student.regno }}</span>
-        <span class="info-badge">Dept: {{ student.department }}</span>
-        <span class="info-badge">Semester: {{ student.sem }}</span>
+        <!-- Navigation -->
+        <nav class="sidebar-nav" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+            <a class="sidebar-link {% if active_tab == 'dash' or not active_tab %}active{% endif %}"
+                id="v-pills-dash-tab" data-bs-toggle="pill" data-bs-target="#v-pills-dash" role="tab"
+                aria-controls="v-pills-dash"
+                aria-selected="{% if active_tab == 'dash' or not active_tab %}true{% else %}false{% endif %}">
+                <i class="fas fa-th-large"></i><span>Dashboard</span>
+            </a>
+
+            <a class="sidebar-link {% if active_tab == 'jobs' %}active{% endif %}" id="v-pills-jobs-tab"
+                data-bs-toggle="pill" data-bs-target="#v-pills-jobs" role="tab" aria-controls="v-pills-jobs"
+                aria-selected="{% if active_tab == 'jobs' %}true{% else %}false{% endif %}">
+                <i class="fas fa-briefcase"></i><span>Job Openings</span>
+            </a>
+
+            <a class="sidebar-link {% if active_tab == 'apps' %}active{% endif %}" id="v-pills-apps-tab"
+                data-bs-toggle="pill" data-bs-target="#v-pills-apps" role="tab" aria-controls="v-pills-apps"
+                aria-selected="{% if active_tab == 'apps' %}true{% else %}false{% endif %}">
+                <i class="fas fa-file-alt"></i><span>My Applications</span>
+            </a>
+
+            <a class="sidebar-link {% if active_tab == 'builder' %}active{% endif %}" id="v-pills-builder-tab"
+                data-bs-toggle="pill" data-bs-target="#v-pills-builder" role="tab" aria-controls="v-pills-builder"
+                aria-selected="{% if active_tab == 'builder' %}true{% else %}false{% endif %}">
+                <i class="fas fa-file-invoice"></i><span>Resume Builder</span>
+            </a>
+
+            <a class="sidebar-link {% if active_tab == 'ats' %}active{% endif %}" id="v-pills-ats-tab"
+                data-bs-toggle="pill" data-bs-target="#v-pills-ats" role="tab" aria-controls="v-pills-ats"
+                aria-selected="false">
+                <i class="fas fa-chart-line"></i><span>ATS Score</span>
+            </a>
+
+
+            <hr class="sidebar-divider">
+
+            <a class="sidebar-link" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile"
+                role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                <i class="fas fa-user-circle"></i><span>Profile</span>
+            </a>
+
+            <a class="sidebar-link" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings"
+                role="tab" aria-controls="v-pills-settings" aria-selected="false">
+                <i class="fas fa-cog"></i><span>Settings</span>
+            </a>
+        </nav>
+
+        <!-- Logout -->
+        <div class="logout-section">
+            <a href="/logout" class="btn btn-outline-danger logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
     </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrapper">
+        <!-- Header Bar -->
+        <div class="header-bar">
+            <h4 class="header-title">Dashboard Overview</h4>
+
+            <div class="header-user">
+                <div class="user-info visible">
+                    <p class="user-name">{{ student.name }}</p>
+                    <p class="user-batch">Batch: {{ student.batch }}</p>
+                </div>
+                <div class="avatar-badge overflow-hidden">
+                    {% if user.avatar %}
+                    <img src="{{ url_for('static', filename=user.avatar) }}"
+                        style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <img src="{{ user.email | gravatar }}" style="width: 100%; height: 100%;">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-wrapper">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show rounded-4 shadow-sm"
+                    role="alert">
+                    <i
+                        class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="v-pills-tabContent">
+
+
+                <!-- ─── TAB 1: DASHBOARD OVERVIEW ─── -->
+                <div class="tab-pane fade {% if active_tab == 'dash' or not active_tab %}show active{% endif %}"
+                    id="v-pills-dash" role="tabpanel" aria-labelledby="v-pills-dash-tab">
+                    <!-- WELCOME BANNER -->
+                    <div class="welcome-banner mb-4 shadow-lg">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="fw-bold mb-2">Hello, {{ student.name }}! 👋</h2>
+                                <p class="opacity-75 mb-4">Welcome to your placement dashboard. Your career journey is
+                                    looking bright.</p>
+
+                                <div class="d-flex flex-wrap">
+                                    <span class="info-badge">
+                                        <i class="fas fa-id-card"></i>{{ student.regno }}
+                                    </span>
+                                    <span class="info-badge">
+                                        <i class="fas fa-building"></i>{{ student.department }}
+                                    </span>
+                                    <span class="info-badge">
+                                        <i class="fas fa-calendar-check"></i>Semester {{ student.sem }}
+                                    </span>
+                                    <span class="info-badge">
+                                        <i class="fas fa-users"></i>Batch {{ student.batch }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 d-none d-md-block text-center">
+                                <i class="fas fa-graduation-cap fa-5x opacity-25"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOTICE BOARD -->
+                    {% if announcements %}
+                    <div class="card mb-5 border-0 overflow-hidden">
+                        <div
+                            class="card-header bg-white py-3 px-4 d-flex align-items-center justify-content-between border-0">
+                            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                                <i class="fas fa-bullhorn text-primary"></i> Notice Board
+                            </h5>
+                            <span class="badge bg-primary rounded-pill">{{ announcements|length }} Updates</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for note in announcements %}
+                                <div class="list-group-item p-4 border-0 border-bottom notice-card">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <span
+                                                class="badge {% if note.category == 'urgent' %}bg-danger{% elif note.category == 'results' %}bg-success{% else %}bg-primary{% endif %} rounded-pill mb-2"
+                                                style="font-size: 0.65rem;">
+                                                {{ note.category|upper }}
+                                            </span>
+                                            <h6 class="fw-bold mb-1">{{ note.title }}</h6>
+                                        </div>
+                                        <small class="text-muted"><i class="far fa-clock me-1"></i>{{
+                                            note.created_at.strftime('%d %b') if note.created_at else 'Today' }}</small>
+                                    </div>
+                                    <p class="mb-0 text-secondary small">{{ note.content }}</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- STATS GRID -->
+                    <div class="stats-grid">
+                        <div class="card p-4 text-center h-100">
+                            <div class="stat-icon bg-soft-blue mx-auto">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                            <div class="text-muted small fw-bold text-uppercase">Applied</div>
+                            <div class="h3 fw-bold mt-1 text-primary">{{ stats.total_applied if stats else '0' }}</div>
+                        </div>
+                        <div class="card p-4 text-center h-100">
+                            <div class="stat-icon bg-soft-success mx-auto">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="text-muted small fw-bold text-uppercase">Shortlisted</div>
+                            <div class="h3 fw-bold mt-1 text-success">{{ stats.shortlisted if stats else '0' }}</div>
+                        </div>
+                        <div class="card p-4 text-center h-100">
+                            <div class="stat-icon bg-soft-warning mx-auto">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="text-muted small fw-bold text-uppercase">Interviews</div>
+                            <div class="h3 fw-bold mt-1 text-warning">{{ stats.interviews if stats else '0' }}</div>
+                        </div>
+                        <div class="card p-4 text-center h-100">
+                            <div class="stat-icon bg-soft-danger mx-auto">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="text-muted small fw-bold text-uppercase">Rejected</div>
+                            <div class="h3 fw-bold mt-1 text-danger">{{ stats.rejected if stats else '0' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- RECOMMENDED JOBS -->
+                    <div class="card p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold mb-0">Recommended Jobs</h5>
+                            <a href="#" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                onclick="document.getElementById('v-pills-jobs-tab').click()">View All</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border-0">
+                                <thead>
+                                    <tr>
+                                        <th class="border-0">Company</th>
+                                        <th class="border-0">Role</th>
+                                        <th class="border-0">Eligibility</th>
+                                        <th class="border-0 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for j in jobs[:5] %}
+                                    <tr>
+                                        <td class="border-0">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-soft-blue p-2 rounded me-3">
+                                                    <i class="fas fa-laptop-code"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">{{ j.company_name }}</div>
+                                                    <div class="text-muted x-small" style="font-size: 0.7rem;"><i
+                                                            class="fas fa-map-marker-alt me-1"></i>{{ j.location or
+                                                        'Remote' }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="border-0 fw-medium">{{ j.job_role }}</td>
+                                        <td class="border-0">
+                                            <span class="badge bg-light text-dark border">CGPA: {{ j.min_cgpa }}</span>
+                                        </td>
+                                        <td class="border-0 text-center">
+                                            {% if j.id in applied_job_ids %}
+                                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                                <i class="fas fa-check-double me-1"></i>Applied
+                                            </span>
+                                            {% else %}
+                                            <form method="POST" action="/apply_job/{{ j.id }}" class="m-0"
+                                                style="display:inline;">
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-dark px-4 rounded-pill">Apply</button>
+                                            </form>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-outline-info rounded-circle"
+                                                style="width: 32px; height: 32px; padding: 0;" data-bs-toggle="modal"
+                                                data-bs-target="#viewJobModal{{ j.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- RECENT ACTIVITY -->
+                    <div class="card p-4">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-history me-2 text-primary"></i>Recent Activity</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for app in applications[:5] %}
+                            <li
+                                class="list-group-item px-0 py-3 border-0 border-bottom d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold small">{{ app.job.company_name if app.job else 'Company' }}
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Status updated to {{ app.status
+                                        }}</div>
+                                </div>
+                                <span>
+                                    <span
+                                        class="badge {% if app.status|lower in ['applied', 'pending'] %}bg-soft-blue{% elif app.status|lower in ['shortlisted', 'selected'] %}bg-soft-success{% elif app.status|lower in ['interview', 'interviewed'] %}bg-soft-warning{% else %}bg-soft-danger{% endif %} rounded-pill px-3">
+                                        {{ app.status }}
+                                    </span>
+                                </span>
+                            </li>
+                            {% endfor %}
+                            {% if not applications %}
+                            <li class="list-group-item px-0 py-3 border-0 text-center text-muted">No recent activity
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- ─── TAB 2: JOB OPENINGS ─── -->
+                <div class="tab-pane fade {% if active_tab == 'jobs' %}show active{% endif %}" id="v-pills-jobs"
+                    role="tabpanel" aria-labelledby="v-pills-jobs-tab">
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-4">All Job Openings</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border-0">
+                                <thead>
+                                    <tr>
+                                        <th class="border-0">Company</th>
+                                        <th class="border-0">Role</th>
+                                        <th class="border-0">Location</th>
+                                        <th class="border-0">Salary</th>
+                                        <th class="border-0 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for j in jobs %}
+                                    <tr>
+                                        <td class="border-0">
+                                            <div class="fw-bold text-dark">{{ j.company_name }}</div>
+                                        </td>
+                                        <td class="border-0 fw-medium">{{ j.job_role }}</td>
+                                        <td class="border-0">
+                                            <span class="badge bg-light text-dark">{{ j.location or 'Remote' }}</span>
+                                        </td>
+                                        <td class="border-0 fw-bold">{{ j.salary_package or 'N/A' }}</td>
+                                        <td class="border-0 text-center">
+                                            {% if j.id in applied_job_ids %}
+                                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                                <i class="fas fa-check-double me-1"></i>Applied
+                                            </span>
+                                            {% else %}
+                                            <form method="POST" action="/apply_job/{{ j.id }}" class="m-0"
+                                                style="display:inline;">
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-dark px-4 rounded-pill">Apply</button>
+                                            </form>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-view-details rounded-circle"
+                                                style="width: 32px; height: 32px; padding: 0;" data-bs-toggle="modal"
+                                                data-bs-target="#viewJobModal{{ j.id }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── TAB 3: MY APPLICATIONS ─── -->
+                <div class="tab-pane fade {% if active_tab == 'apps' %}show active{% endif %}" id="v-pills-apps"
+                    role="tabpanel" aria-labelledby="v-pills-apps-tab">
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-4">My Applications</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border-0">
+                                <thead>
+                                    <tr>
+                                        <th class="border-0">Company</th>
+                                        <th class="border-0">Role</th>
+                                        <th class="border-0">Applied Date</th>
+                                        <th class="border-0">Status</th>
+                                        <th class="border-0 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for app in applications %}
+                                    <tr>
+                                        <td class="border-0 fw-bold">{{ app.job.company_name if app.job else 'Company'
+                                            }}</td>
+                                        <td class="border-0">{{ app.job.job_role if app.job else 'Role' }}</td>
+                                        <td class="border-0 text-muted small">{{ app.applied_date.strftime('%d %b %Y')
+                                            if app.applied_date else 'N/A' }}</td>
+                                        <td class="border-0">
+                                            <span
+                                                class="badge {% if app.status|lower in ['applied', 'pending'] %}bg-soft-blue{% elif app.status|lower in ['shortlisted', 'selected'] %}bg-soft-success{% elif app.status|lower in ['interview', 'interviewed'] %}bg-soft-warning{% else %}bg-soft-danger{% endif %} rounded-pill px-3">
+                                                {{ app.status }}
+                                            </span>
+                                        </td>
+                                        <td class="border-0 text-center">
+
+                                            <button class="btn btn-sm btn-view-details rounded-circle"
+                                                style="width: 32px; height: 32px; padding: 0;" data-bs-toggle="modal"
+                                                data-bs-target="#viewJobModal{{ app.job.id if app.job else '' }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if not applications %}
+                                    <tr>
+                                        <td colspan="5" class="border-0 text-center text-muted py-4">No applications yet
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── TAB 4: RESUME BUILDER ─── -->
+                <div class="tab-pane fade {% if active_tab == 'builder' %}show active{% endif %}" id="v-pills-builder"
+                    role="tabpanel">
+                    <div class="resume-wrapper">
+                        {% include 'resume_builder.html' %}
+                    </div>
+                </div>
+
+                <!-- ─── TAB ATS SCORE ─── -->
+                <div class="tab-pane fade {% if active_tab == 'ats' %}show active{% endif %}" id="v-pills-ats"
+                    role="tabpanel" aria-labelledby="v-pills-ats-tab">
+                    <div class="resume-wrapper">
+                        {% include 'ats.html' %}
+                    </div>
+                </div>
+                <!-- ─── TAB: profile settings ─── -->
+                <div class="tab-pane fade {% if active_tab == 'profile' %}show active{% endif %}" id="v-pills-profile"
+                    role="tabpanel">
+
+                    <div class="profile-card overflow-hidden">
+
+                        <!-- HEADER -->
+                        <div class="row align-items-center g-4 mb-4">
+
+                            <div class="col-auto">
+                                <div class="profile-avatar-lg overflow-hidden">
+                                    {% if user.avatar %}
+                                    <img src="{{ url_for('static', filename=user.avatar) }}?v={{ user.id }}"
+                                        style="width:100%; height:100%; object-fit:cover;">
+                                    {% else %}
+                                    <img src="{{ user.email | gravatar }}" style="width:100%; height:100%;">
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <h2 class="fw-bold mb-1">{{ student.name }}</h2>
+                                <p class="text-muted fw-semibold mb-0">
+                                    <i class="bi bi-mortarboard me-2"></i>{{ student.department }}
+                                </p>
+                                <p class="text-muted extra-small mb-0 text-uppercase fw-bold opacity-75">
+                                    Student • Reg No: {{ student.regno }}
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <!-- INFO SECTION -->
+                        <div class="row g-4 pt-4 border-top">
+
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    <p class="extra-small text-muted mb-1">Status</p>
+                                    <span class="badge bg-success rounded-pill px-3">Active</span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    <p class="extra-small text-muted mb-1">Email</p>
+                                    <p class="fw-600 mb-0">{{ user.email }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    <p class="extra-small text-muted mb-1">Phone</p>
+                                    <p class="fw-600 mb-0">{{ user.phone or 'Not Provided' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    <p class="extra-small text-muted mb-1">Batch</p>
+                                    <p class="fw-600 mb-0">{{ student.batch }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    <p class="extra-small text-muted mb-1">Semester</p>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3">
+                                        Semester {{ student.sem }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    <p class="extra-small text-muted mb-1">Skills</p>
+                                    <p class="fw-600 mb-0">{{ student.skills or 'Not Provided' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    <p class="extra-small text-muted mb-1">Address</p>
+                                    <p class="fw-600 mb-0">{{ student.address or 'Not Provided' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- RESUME -->
+                            <div class="col-12">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    {% if student and student.resume %}
+                                    <a href="{{ url_for('static', filename=student.resume) }}?v={{ user.id }}"
+                                        target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        <i class="fas fa-file-pdf me-1"></i> View Resume
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">No Resume Uploaded</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- EDIT SECTION -->
+                        <div class="mt-4 pt-4 border-top">
+
+                            <button class="btn btn-outline-primary btn-sm rounded-pill px-4" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#editStudentProfileCollapse">
+                                <i class="bi bi-pencil-square me-1"></i> Edit Profile Details
+                            </button>
+
+                            <div class="collapse mt-3" id="editStudentProfileCollapse">
+
+                                <form method="POST" action="/update_profile" enctype="multipart/form-data"
+                                    class="bg-light p-4 rounded-4 border">
+
+                                    <div class="row g-3">
+
+                                        <!-- LOCKED -->
+                                        <div class="col-md-6">
+                                            <label class="small fw-bold text-muted">Name</label>
+                                            <input type="text" value="{{ student.name }}" class="form-control" disabled>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="small fw-bold text-muted">Reg No</label>
+                                            <input type="text" value="{{ student.regno }}" class="form-control"
+                                                disabled>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="small fw-bold text-muted">Batch</label>
+                                            <input type="text" value="{{ student.batch }}" class="form-control"
+                                                disabled>
+                                        </div>
+
+                                        <!-- EDITABLE -->
+                                        <div class="col-md-6">
+                                            <label class="small fw-bold text-muted">Phone</label>
+                                            <input type="text" name="phone" value="{{ user.phone }}"
+                                                class="form-control">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="small fw-bold text-secondary">Semester</label>
+                                            <select name="sem" class="form-select">
+                                                {% for i in range(1,7) %}
+                                                <option value="{{ i }}" {% if student.sem==i %}selected{% endif %}>
+                                                    Semester {{ i }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="small fw-bold text-secondary">Skills</label>
+                                            <input type="text" name="skills" value="{{ student.skills }}"
+                                                class="form-control">
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label class="small fw-bold text-secondary">Address</label>
+                                            <textarea name="address"
+                                                class="form-control">{{ student.address }}</textarea>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="small fw-bold">Profile Photo</label>
+                                            <input type="file" name="profile_photo" class="form-control">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="small fw-bold">Resume (PDF)</label>
+                                            <input type="file" name="resume" class="form-control" accept=".pdf">
+                                            <small class="text-muted">PDF only (Max 5MB)</small>
+                                        </div>
+
+                                        <div class="col-12 text-end mt-3">
+                                            <button type="submit"
+                                                class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                                                Save Changes
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- ─── TAB 8: SETTINGS ─── -->
+                <div class="tab-pane fade {% if active_tab == 'settings' %}show active{% endif %}" id="v-pills-settings"
+                    role="tabpanel" aria-labelledby="v-pills-settings-tab">
+                    <div class="settings-center">
+                        <div class="card p-4 shadow-sm rounded-4 settings-card">
+
+                            <div class="text-center mb-4">
+                                <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                                    <i class="fas fa-lock text-danger fs-3"></i>
+                                </div>
+                                <h4 class="fw-bold">Security Settings</h4>
+                                <p class="text-muted small">
+                                    Update your password to securely protect your account. Make sure to choose a strong
+                                    password that you haven't used before.
+                                </p>
+                            </div>
+
+                            <form method="POST" action="/change_password">
+
+                                <div class="mb-3">
+                                    <label class="form-label small">Enter Current Password</label>
+                                    <input type="password" class="form-control rounded-3" name="current_password"
+                                        required>
+
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small">Create New Password</label>
+                            
+                                    <input type="password" class="form-control rounded-3" name="new_password" required
+                                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                                        title="Password must be at least 8 characters long and include uppercase, lowercase, number, and special character">
+                                </div>
+
+
+                                <div class="mb-3">
+                                    <label class="form-label small">Confirm New Password</label>
+                                    <input type="password" class="form-control rounded-3" name="confirm_password"
+                                        required>
+                                </div>
+
+                                <button type="submit" class="btn btn-success rounded-pill px-4 d-block mx-auto">
+                                    Update Password Securely
+                                </button>
+
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- MODALS -->
+    {% for app in applications %}
+    {% if app.job %}
+    <!-- View Job Details Modal -->
+    <div class="modal fade" id="viewJobModal{{ app.job.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header modal-header-job-details py-3 border-0">
+                    <h5 class="modal-title fw-bold text-white">
+                        <i class="fas fa-info-circle me-2"></i> Job Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <h4 class="fw-bold mb-1">{{ app.job.job_role }}</h4>
+                    <h6 class="text-secondary mb-4">{{ app.job.company_name }}</h6>
+
+                    <div class="mb-4 p-3 bg-job-card rounded-3 border">
+                        <strong class="d-block small text-muted text-uppercase mb-2">Description</strong>
+                        <p class="mb-0 small" style="white-space: pre-wrap;">{{ app.job.job_description }}</p>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div
+                                class="p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-25 text-center">
+                                <strong class="d-block x-small text-primary text-uppercase mb-1">Min CGPA</strong>
+                                <span class="fs-4 fw-bold text-primary">{{ app.job.min_cgpa }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div
+                                class="p-3 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25 text-center">
+                                <strong class="d-block x-small text-danger text-uppercase mb-1">Backlogs</strong>
+                                <span class="fs-4 fw-bold text-danger">{{ app.job.max_backlogs }}</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <strong class="d-block small text-muted text-uppercase mb-1">Salary Package</strong>
+                            <p class="mb-0 fw-bold">{{ app.job.salary_package or 'Not specified' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+
+
+
+
+    <!-- Secondary Form Modal -->
+    {% for j in jobs %}
+    <div class="modal fade" id="secondaryFormModal{{ j.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-warning bg-opacity-10 py-3 border-0">
+                    <h5 class="modal-title fw-bold text-warning">
+                        <i class="fas fa-file-signature me-2"></i>Step 2 Application
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/submit_secondary_data/{{ j.id }}" method="POST">
+                    <div class="modal-body p-4">
+                        <p class="small text-muted mb-4">Please enter the registration ID or details you received from
+                            the corporate portal after Step 1.</p>
+                        {% set current_app = applications|selectattr("job_id", "equalto", j.id)|first %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Corporate App ID / Details</label>
+                            <textarea name="secondary_data" class="form-control rounded-3" rows="3"
+                                required>{{ current_app.secondary_data if current_app else '' }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="submit" class="btn btn-warning w-100 rounded-pill fw-bold">
+                            {{ 'Update & Proceed' if current_app and current_app.secondary_data else 'Submit & Proceed'
+                            }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% endfor %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
+<script>
+    function enableEdit() {
+        const inputs = document.querySelectorAll('#v-pills-profile input[name], #v-pills-profile textarea');
+
+        inputs.forEach(input => {
+            input.removeAttribute('disabled');
+        });
+
+        document.getElementById('saveBtn').classList.remove('d-none');
+    }
+</script>
+
 </html>

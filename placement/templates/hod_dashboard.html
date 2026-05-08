@@ -1,29 +1,821 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HOD Dashboard - BCA Portal</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link href="{{url_for('static',filename='')}}">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: #f5f0ff; }
-        .navbar-custom { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .navbar-custom .navbar-brand, .navbar-custom .navbar-text { color: #fff !important; font-weight: 600; }
-        .welcome-card { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border-radius: 16px; padding: 28px; margin-bottom: 24px; }
-        .card { border: none; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.07); }
-    </style>
+    <title>HOD Dashboard | Management System</title>
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="{{url_for('static',filename='hod_dashboard.css')}}">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
-<nav class="navbar navbar-custom px-4">
-    <span class="navbar-brand">🏛️ HOD Dashboard</span>
-    <div class="ms-auto d-flex align-items-center gap-3">
-        <span class="navbar-text">{{ user.full_name }}</span>
-        <a href="/logout" class="btn btn-sm btn-light">Logout</a>
-    </div>
-</nav>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="sidebar-wrapper">
+            <!-- Brand -->
+            <div class="brand-section">
+                <span class="brand-text-nova">NOVASPHERE</span>
+            </div>
 
+            <!-- Sidebar Navigation (Tab Nav) -->
+            <div class="sidebar-nav" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <a class="sidebar-link nav-link active" data-bs-toggle="pill" data-bs-target="#dashboard" type="button"
+                    role="tab">
+                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                </a>
+                <a class="sidebar-link nav-link" data-bs-toggle="pill" data-bs-target="#students" type="button"
+                    role="tab">
+                    <i class="bi bi-people-fill"></i> Student Management
+                </a>
+                <a class="sidebar-link nav-link" data-bs-toggle="pill" data-bs-target="#studentsview" type="button"
+                    role="tab">
+                    <i class="bi bi-person-video3"></i> Student View
+                </a>
+
+                <hr class="mx-3 opacity-10">
+
+                <!-- Settings Dropdown (Collapse) -->
+                <div class="nav-item">
+                    <a class="sidebar-link justify-content-between text-secondary" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#settingsCollapse" aria-expanded="false"
+                        href="#settingsCollapse">
+                        <span><i class="bi bi-gear-fill me-3"></i>Settings</span>
+                        <i class="bi bi-chevron-down small toggle-icon"></i>
+                    </a>
+                    <div class="collapse mt-1" id="settingsCollapse">
+                        <a class="sidebar-link nav-link settings-sublink mb-1" id="profile-tab" data-bs-toggle="pill"
+                            data-bs-target="#settings-profile" type="button" role="tab">
+                            <i class="bi bi-person-badge"></i> My Profile
+                        </a>
+                        <a class="sidebar-link nav-link settings-sublink" id="password-tab" data-bs-toggle="pill"
+                            data-bs-target="#settings-password" type="button" role="tab">
+                            <i class="bi bi-shield-lock"></i>Change Password
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Logout -->
+                <div class="mt-auto px-3 mb-4">
+                    <a href="/logout"
+                        class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-door-open-fill"></i> <span>Logout Portal</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="main-wrapper">
+
+            <!-- Global Header -->
+            <div class="global-header">
+                <h5 class="header-title">
+                    HOD Management Portal
+                </h5>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-end d-none d-sm-block">
+                        <p class="small fw-bold mb-0 text-dark">{{ user.full_name }}</p>
+                        <p class="text-muted extra-small mb-0 opacity-75 extra-small-text">Head of Department
+                        </p>
+                    </div>
+                    <div class="avatar-badge overflow-hidden">
+                        {% if user.avatar %}
+                        <img src="{{ url_for('static', filename=user.avatar) }}"
+                            style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <img src="{{ user.email | gravatar }}" style="width: 100%; height: 100%;">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Flash Alert Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4"
+                role="alert">
+                <i class="bi bi-stars me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="hodTabsContent">
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                    <div class="welcome-card mb-4">
+                        <h1><i class="fas fa-rocket"></i> Welcome back, HOD</h1>
+                        <p>Here is what's happening in your department today.</p>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <h6>Total Students</h6>
+                                <h3>{{ total_students }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <h6>Registered Students</h6>
+                                <h3>{{ registered_students }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <h6>Unregistered Students</h6>
+                                <h3>{{ unregistered_students }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Management Tab -->
+                <div class="tab-pane fade" id="students" role="tabpanel" aria-labelledby="students-tab">
+
+                    <!-- ================= UPLOAD ================= -->
+                    <div class="card custom-card">
+                        <div class="card-body">
+                            <h4 class="card-title mb-4">Student Records</h4>
+
+                            <!-- Upload Guidelines -->
+                            <div class="alert border-0 shadow-sm rounded-4 mb-4"
+                                style="background-color:#f1f5f9; color:#334155;">
+                                <h6 class="fw-bold mb-1">
+                                    <i class="fas fa-info-circle me-2"></i>Quick Guide
+                                </h6>
+                                <p class="mb-0 small">
+                                    Upload a file (<code>.csv</code>, <code>.xlsx</code>, <code>.xls</code>) with
+                                    <code>regno</code> and <code>phone</code>.
+                                    Make sure the data is valid—fix any errors shown in the preview before
+                                    submitting.
+                                </p>
+                            </div>
+                            <form method="POST" action="/upload_students" enctype="multipart/form-data">
+                                <div class="row mb-4">
+
+                                    <!-- File Upload -->
+                                    <div class="col-md-12">
+                                        <label class="form-label">Upload Student Data (CSV/Excel)</label>
+                                        <input type="file" name="file" class="form-control" accept=".csv, .xlsx, .xls"
+                                            required>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="col-md-12 mt-3 text-end">
+                                        <button class="btn btn-primary" type="submit">
+                                            <i class="fas fa-upload me-2"></i>Upload & Preview
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ================= PREVIEW (NEW) ================= -->
+                    {% if students_preview %}
+
+                    <div class="card custom-card mt-4">
+                        <div class="card-body">
+
+                            <form id="reviewForm" method="POST" action="/confirm_upload_students">
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0 fw-bold text-secondary">Review Data</h5>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                            onclick="showOnlyErrors()">
+                                            <i class="fas fa-exclamation-triangle me-1"></i> Show Errors
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-secondary rounded-pill px-3 ms-2"
+                                            onclick="showAllRows()">
+                                            Show All
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive preview-table-container">
+                                    <table class="table preview-table">
+                                        <thead>
+                                            <tr>
+                                                <th width="50">#</th>
+                                                <th>Reg No</th>
+                                                <th>Phone</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {% for s in students_preview %}
+                                            <tr class="student-row {% if not s.valid %}error-row{% endif %} 
+                                              {% if 'Duplicate' in s.errors %}duplicate-row{% endif %}">
+
+                                                <td>{{ loop.index }}</td>
+
+                                                <td>
+                                                    <input type="text" id="regno_{{ loop.index0 }}"
+                                                        name="regno_{{ loop.index0 }}" value="{{ s.regno }}"
+                                                        class="form-control {% if not s.valid %}is-invalid{% endif %}">
+                                                </td>
+                                                <td>
+                                                    <input type="text" id="phone_{{ loop.index0 }}"
+                                                        name="phone_{{ loop.index0 }}" value="{{ s.phone }}"
+                                                        class="form-control {% if not s.valid %}is-invalid{% endif %}">
+                                                </td>
+
+                                                <!-- ✅ THIS IS THE IMPORTANT PART -->
+                                                <td id="status_{{ loop.index0 }}">
+                                                    {% if s.valid %}
+                                                    <span class="badge bg-success">Valid</span>
+                                                    {% else %}
+
+                                                    {% for err in s.errors %}
+                                                    {% if 'Duplicate' in err %}
+                                                    <span class="badge bg-warning text-dark me-1">
+                                                        ⚠ {{ err }}
+                                                    </span>
+                                                    <div class="small text-muted">
+                                                        👉 Fix: Change Reg No or remove duplicate row
+                                                    </div>
+
+                                                    {% elif 'Invalid Phone' in err %}
+                                                    <span class="badge bg-danger me-1">
+                                                        ❌ {{ err }}
+                                                    </span>
+                                                    <div class="small text-muted">
+                                                        👉 Fix: Enter valid 10-digit phone number
+                                                    </div>
+
+                                                    {% elif 'Invalid Reg' in err %}
+                                                    <span class="badge bg-danger me-1">
+                                                        ❌ {{ err }}
+                                                    </span>
+                                                    <div class="small text-muted">
+                                                        👉 Fix: Check registration number format
+                                                    </div>
+
+                                                    {% else %}
+                                                    <span class="badge bg-secondary me-1">
+                                                        {{ err }}
+                                                    </span>
+                                                    {% endif %}
+                                                    {% endfor %}
+
+                                                    {% endif %}
+                                                </td>
+
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+
+                                    </table>
+                                </div>
+
+                                <input type="hidden" name="total_rows" value="{{ students_preview|length }}">
+
+                                <div class="d-flex justify-content-between">
+                                    <a href="/hod_dashboard" class="btn btn-secondary">Cancel</a>
+                                    <button class="btn btn-success">
+                                        Confirm & Save
+                                    </button>
+                                </div>
+
+                            </form>
+
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+                <!-- Student View Tab -->
+                <div class="tab-pane fade" id="studentsview" role="tabpanel" aria-labelledby="studentsview-tab">
+
+                    <!-- VIEW STUDENT MODAL -->
+                    <!-- STUDENT TABLE -->
+                    <div class="card student-card mt-4">
+                        <div class="card-body">
+                            <h4 class="card-title mb-4 title-primary"> Placement Student List</h4>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+
+                                    <thead class="table-header">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Reg No</th>
+                                            <th>Batch</th>
+                                            <th>status</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {% if applications %}
+                                        {% for a in applications %}
+                                        <tr class="table-row">
+                                            <td class="fw-semibold">{{ a.student.name or 'N/A' }}</td>
+                                            <td>{{ a.student.regno }}</td>
+                                            <td>
+                                                {{ a.student.batch }}
+                                            </td>
+                                            <td>{{ a.status }}</td>
+
+                                            <td class="text-center">
+
+                                                <button class="btn btn-sm btn-view" data-bs-toggle="modal"
+                                                    data-bs-target="#viewStudentModal{{ loop.index }}"> View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">
+                                                No students placed found
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    </tbody>
+
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                </div>
+
+
+                <!-- Profile Settings Tab -->
+                <div class="tab-pane fade" id="settings-profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <h4 class="mb-4 text-center">HOD Profile</h4>
+
+                    <div class="card custom-card col-md-8 mx-auto">
+                        <div class="card-body">
+
+                            <!-- Profile Header -->
+                            <div class="row align-items-center g-4 mb-4">
+                                <div class="col-auto">
+                                    <div class="profile-avatar-lg overflow-hidden "
+                                        onclick="document.getElementById('profile_photo_input').click()">
+                                        {% if user.avatar %}
+                                        <img src="{{ url_for('static', filename='uploads/profiles/' + user.avatar) }}"
+                                            style="width: 100%; height: 100%; object-fit: cover;">
+                                        <div class="btn-remove-photo"
+                                            onclick="event.stopPropagation(); removeProfilePhoto()"
+                                            title="Remove Photo">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </div>
+                                        {% else %}
+                                        <img src="{{ user.email | gravatar }}" style="width: 100%; height: 100%;">
+                                        {% endif %}
+                                        <div class="avatar-overlay">
+                                            <i class="bi bi-camera-fill"></i>
+                                            <span>Change</span>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h4 class="fw-bold mb-1">{{ user.full_name }}</h4>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-envelope me-2"></i>{{ user.email }}
+                                    </p>
+                                    <p class="text-muted extra-small mb-0 text-uppercase fw-bold opacity-75">
+                                        Head of Department
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Profile Details -->
+                            <div class="row g-4 pt-3 border-top">
+
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded-4 border">
+                                        <p class="text-muted small mb-1">Department</p>
+                                        <p class="fw-semibold mb-0">
+                                            <i class="fas fa-building me-2 text-primary"></i>
+                                            {{ user.department or 'N/A' }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded-4 border">
+                                        <p class="text-muted small mb-1">Contact Number</p>
+                                        <p class="fw-semibold mb-0">
+                                            <i class="fas fa-phone me-2 text-primary"></i>
+                                            {{ user.phone or 'Not Provided' }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded-4 border">
+                                        <p class="text-muted small mb-1">Account Status</p>
+                                        <p class="fw-semibold mb-0">
+                                            <span class="badge bg-success rounded-pill px-3 me-2">Active</span>
+                                            Role: {{ user.role|upper }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- EDIT PROFILE (NEW) -->
+                            <div class="mt-4 pt-4 border-top">
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-4" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#editProfileCollapse">
+                                    <i class="fas fa-edit me-1"></i> Edit Profile
+                                </button>
+
+                                <div class="collapse mt-3" id="editProfileCollapse">
+                                    <form action="/update_profile" method="POST" enctype="multipart/form-data"
+                                        class="bg-light p-4 rounded-4 border">
+
+                                        <div class="row g-3">
+
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">Full Name</label>
+                                                <input type="text" name="fullname" value="{{ user.full_name }}"
+                                                    class="form-control" required>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">Email</label>
+                                                <input type="email" name="email" value="{{ user.email }}"
+                                                    class="form-control" required>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">Phone</label>
+                                                <input type="text" name="phone" value="{{ user.phone or '' }}"
+                                                    class="form-control">
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">Profile Photo</label>
+                                                <input type="file" name="profile_photo" class="form-control">
+                                            </div>
+
+                                            <div class="col-12 text-end">
+                                                <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                                    Save Changes
+                                                </button>
+                                            </div>
+
+                                        </div>
+
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Change Password Tab -->
+
+                <div class="tab-pane fade" id="settings-password" role="tabpanel" aria-labelledby="password-tab">
+
+                    <div class="row justify-content-center">
+
+                        <div class="col-lg-6">
+
+                            <div class="card border-0 shadow-sm rounded-4 p-4">
+
+                                <!-- Header -->
+                                <div class="text-center mb-4">
+                                    <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                                        <i class="fas fa-lock text-danger fs-3"></i>
+                                    </div>
+                                    <h4 class="fw-bold">Security Settings</h4>
+                                    <p class="text-muted small">
+                                        Update your password to secure HOD dashboard access
+                                    </p>
+                                </div>
+
+                                <!-- Form -->
+
+                                <form method="POST" action="/change_password">
+
+                                    <div class="mb-3">
+                                        <label class="form-label small">Enter Current Password</label>
+                                        <input type="password" class="form-control rounded-3" name="current_password"
+                                            required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small">Create New Password</label>
+                                        <input type="password" class="form-control rounded-3" name="new_password"
+                                            required
+                                            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                                            title="Password must be at least 8 characters long and include uppercase, lowercase, number, and special character">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small">Confirm New Password</label>
+                                        <input type="password" class="form-control rounded-3" name="confirm_password"
+                                            required>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success rounded-pill px-4 d-block mx-auto">
+                                        Update Password Securely
+                                    </button>
+
+                                </form>
+                                <!-- Footer Note -->
+                                <p class="text-center small text-muted mt-3 fw-bold text-uppercase">
+                                    All password changes are logged for security audit
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if students %}
+    {% for s in students %}
+    <!-- MODAL -->
+    <div class="modal fade" id="viewStudentModal{{ loop.index }}" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content modal-custom">
+
+                <!-- Header -->
+                <div class="modal-header modal-header-custom">
+                    <h5 class="modal-title">Student Profile</h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">   <div class="profile-field"><b>Name:</b> {{ s.name or 'N/A' }}</div></div>
+                        <div class="col-md-6"> <div class="profile-field"><b>Email:</b> {{ s.email or 'N/A' }}</div></div>
+
+                        <div class="col-md-6"><div class="profile-field"><b>Phone:</b> {{ s.phone or 'N/A' }}</div></div>
+                        <div class="col-md-6"><div class="profile-field"><b>Reg No:</b> {{ s.regno }}</div></div>
+
+                        <div class="col-md-6">  <div class="profile-field"><b>Department:</b> {{ s.department or 'N/A'
+                            }}</div></div>
+                        <div class="col-md-6"><div class="profile-field"><b>Semester:</b> {{ s.sem or 'N/A' }}</div></div>
+
+                        <div class="col-md-6"><div class="profile-field"><b>Gender:</b> {{ s.gender }}
+                        </div>
+                        <div class="col-md-6"><div class="profile-field"><b>DOB:</b> {{ s.dob.strftime('%d-%m-%Y') if s.dob else 'N/A' }}</div></div>
+
+                        <div class="col-md-6"> <div class="profile-field"><b>Batch:</b> {{ s.batch or 'N/A' }}</div></div>
+
+
+
+                        <div class="col-md-6"> <div class="profile-field"><b>CGPA:</b> {{ s.cgpa or 'N/A'}}</div></div>
+
+                        <div class="col-md-6"><div class="profile-field"><b>Backlogs:</b>{{ s.backlogs or '0'
+                            }}</div></div>
+
+                        <div class="col-md-6"><div class="profile-field"><b>10th %:</b> {{
+                            s.tenth_percent or 'N/A' }}</div></div>
+
+                        <div class="col-md-6"><div class="profile-field"><b>12th %:</b>
+                            {{s.twelfth_percent or 'N/A' }}</div></div>
+
+
+                        <div class="col-md-12"><div class="profile-field"><b>Address:</b> {{ s.address or 'N/A' }}</div></div>
+
+                        <div class="col-md-12"><div class="profile-field"><b>Skills:</b> {{ s.skills or 'N/A' }}
+                        </div></div>
+
+                        <!-- Resume -->
+                        <div class="text-center mt-4">
+                            {% if s.resume %}
+                            <a href="{{ url_for('static', filename=s.resume) }}" target="_blank" class="btn btn-resume">
+                                📄 View Resume
+                            </a>
+                            {% else %}
+                            <span class="text-muted">No Resume Uploaded</span>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div> <!-- MUST CLOSE MODAL HERE -->
+    {% endfor %}
+    {% endif %}
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showOnlyErrors() {
+            let rows = document.querySelectorAll('.student-row');
+            rows.forEach(row => {
+                if (!row.classList.contains('error-row') && !row.classList.contains('duplicate-row')) {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function showAllRows() {
+            let rows = document.querySelectorAll('.student-row');
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+        }
+
+        // ✅ ONLY ONE DOMContentLoaded
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // 🔥 TAB PERSISTENCE LOGIC
+            let activeTab = "{{ active_tab or 'dashboard' }}";
+            let tabTrigger = document.querySelector(`[data-bs-target="#${activeTab}"]`);
+            if (tabTrigger) {
+                let instance = bootstrap.Tab.getOrCreateInstance(tabTrigger);
+                instance.show();
+            }
+
+            const totalRows = JSON.parse('{{ students_preview|default([])|length|tojson|safe }}');
+            const existingRegnos = JSON.parse('{{ existing_regnos|default([])|tojson|safe }}');
+
+            function validateRow(index) {
+
+                let regnoInput = document.getElementById(`regno_${index}`);
+                let phoneInput = document.getElementById(`phone_${index}`);
+                let statusCell = document.getElementById(`status_${index}`);
+
+                if (!regnoInput || !phoneInput || !statusCell) return;
+
+                let row = regnoInput.closest('.student-row');
+                let regno = regnoInput.value.trim().toUpperCase();
+                let phone = phoneInput.value.trim();
+
+                let errors = [];
+
+                // Clear previous invalid UI state
+                regnoInput.classList.remove('is-invalid');
+                phoneInput.classList.remove('is-invalid');
+
+                const regnoPattern = /^U16NB\d{2}S\d{4}$/;
+                const phonePattern = /^\d{10}$/;
+
+                // REGNO
+                if (!regno) {
+                    errors.push("RegNo required");
+                    regnoInput.classList.add('is-invalid');
+                } else if (!regnoPattern.test(regno)) {
+                    errors.push("Invalid RegNo");
+                    regnoInput.classList.add('is-invalid');
+                }
+
+                // PHONE
+                if (!phone) {
+                    errors.push("Phone required");
+                    phoneInput.classList.add('is-invalid');
+                } else if (!phonePattern.test(phone)) {
+                    errors.push("Invalid Phone");
+                    phoneInput.classList.add('is-invalid');
+                }
+
+                // DUPLICATE IN TABLE
+                let allRegnos = [];
+                for (let i = 0; i < totalRows; i++) {
+                    let val = document.getElementById(`regno_${i}`)?.value.trim().toUpperCase();
+                    if (val) allRegnos.push(val);
+                }
+                let count = allRegnos.filter(r => r === regno).length;
+                if (count > 1) {
+                    errors.push("Duplicate RegNo in uploaded file");
+                    regnoInput.classList.add('is-invalid');
+                }
+
+                // DUPLICATE IN DB
+                if (existingRegnos.includes(regno)) {
+                    errors.push("RegNo already exists in database");
+                    regnoInput.classList.add('is-invalid');
+                }
+
+                // UPDATE STATUS AND ROW CLASSES
+                if (errors.length === 0) {
+                    statusCell.innerHTML = `<span class="badge bg-success">✔ Valid</span>`;
+                    if (row) row.classList.remove('error-row', 'duplicate-row');
+                } else {
+                    let html = "";
+                    let isDuplicate = false;
+                    if (row) row.classList.add('error-row');
+
+                    errors.forEach(err => {
+                        if (err === "Invalid Phone") {
+                            html += `<span class="badge bg-danger">❌ Invalid Phone</span><br>`;
+                        }
+                        else if (err === "Invalid RegNo") {
+                            html += `<span class="badge bg-danger">❌ Invalid RegNo</span><br>`;
+                        }
+                        else if (err === "RegNo already exists in database") {
+                            html += `<span class="badge bg-warning text-dark">⚠ Already in DB</span><br>`;
+                        }
+                        else if (err === "Duplicate RegNo in uploaded file") {
+                            html += `<span class="badge bg-warning text-dark">⚠ Duplicate in File</span><br>`;
+                            isDuplicate = true;
+                        }
+                        else {
+                            html += `<span class="badge bg-secondary">${err}</span><br>`;
+                        }
+                    });
+
+                    if (row) row.classList.toggle('duplicate-row', isDuplicate);
+                    statusCell.innerHTML = html;
+                }
+            }
+
+            // New function to validate all rows to keep duplicate status synchronized
+            function validateAllRows() {
+                for (let i = 0; i < totalRows; i++) {
+                    validateRow(i);
+                }
+            }
+
+            // 🔥 EVENT LISTENERS
+            for (let i = 0; i < totalRows; i++) {
+
+                let reg = document.getElementById(`regno_${i}`);
+                let ph = document.getElementById(`phone_${i}`);
+
+                if (reg) reg.addEventListener("input", validateAllRows);
+                if (ph) ph.addEventListener("input", validateAllRows);
+            }
+
+            // 🚫 PREVENT ENTER KEY FROM SUBMITTING THE REVIEW FORM
+            const reviewForm = document.getElementById('reviewForm');
+            if (reviewForm) {
+                reviewForm.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tab Persistence Logic
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeTab = urlParams.get('tab');
+
+            // Generic Tab Persistence Logic
+            if (activeTab) {
+                const targetTab = document.querySelector(`a[data-bs-target="#v-pills-${activeTab}"]`);
+                if (targetTab) {
+                    const tabInstance = bootstrap.Tab.getOrCreateInstance(targetTab);
+                    tabInstance.show();
+                }
+            }
+
+            // Mobile Sidebar Toggle
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function () {
+                    sidebar.classList.toggle('show');
+                });
+            }
+        });
+
+        function removeProfilePhoto() {
+            if (confirm('Are you sure you want to remove your profile picture?')) {
+                document.getElementById('remove_photo_input').value = 'true';
+                document.querySelector('form[action="/update_profile"]').submit();
+            }
+        }
+    </script>
+</body>
 
 </html>

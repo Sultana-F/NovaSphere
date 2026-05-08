@@ -1,0 +1,225 @@
+<style>
+    .ats-container {
+        width: 100%;
+        max-width: none;
+        padding: 0 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .ats-container {
+            max-width: 100%;
+            padding: 0 1rem;
+        }
+    }
+
+    .ats-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: none;
+        background: white;
+    }
+
+    .ats-title {
+        font-weight: 700;
+        color: #667eea;
+        text-align: center;
+        font-size: 1.75rem;
+    }
+
+    .tab-content {
+        width: 100%;
+        height: 100%;
+    }
+
+
+
+    .ats-card {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .ats-btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 10px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .ats-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .ats-progress {
+        height: 25px;
+        border-radius: 10px;
+        background-color: #f0f0f0;
+    }
+
+    .ats-section-title {
+        font-weight: 600;
+        margin-top: 20px;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .ats-badge {
+        margin: 5px 3px;
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .form-control,
+    .form-label {
+        font-size: 1rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .text-muted {
+        font-size: 0.9rem;
+    }
+
+    ul {
+        padding-left: 1.5rem;
+    }
+
+    ul li {
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+</style>
+
+<div class="ats-container">
+    <!-- FORM -->
+    <div class="ats-card p-4">
+        <h2 class="ats-title mb-4">🚀 ATS Resume Analyzer</h2>
+
+        <form method="POST" action="/ats_analyzer" enctype="multipart/form-data" id="atsForm">
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">📋 Job Description</label>
+                <textarea name="job_desc" class="form-control" rows="5" required>{{ job_desc or '' }}</textarea>
+                <small class="text-muted">Minimum 50 characters required</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">📄 Upload Resume (PDF)</label>
+                <input type="file" name="resume" class="form-control" accept=".pdf" required>
+                <small class="text-muted">Max 5MB PDF only</small>
+            </div>
+
+            <button class="btn btn-primary ats-btn-primary w-100" type="submit">
+                🔍 Analyze Resume
+            </button>
+        </form>
+    </div>
+
+    <!-- RESULT -->
+    {% if result %}
+
+    {% set safe_score = (result.score | default(0) | float) | round(0) %}
+
+    <div class="ats-card p-4 mt-4">
+
+        <h3 class="text-center mb-3">📊 ATS Score</h3>
+
+        <!-- Dynamic color -->
+        <div class="progress ats-progress mb-3">
+            <div class="progress-bar
+                {% if safe_score >= 80 %}bg-success
+                {% elif safe_score >= 60 %}bg-warning
+                {% else %}bg-danger
+                {% endif %}" style="width: {{ safe_score }}%;">
+                {{ safe_score }}%
+            </div>
+        </div>
+
+        <h5 class="text-center">
+            {{ result.remark | default("Analysis Complete") | e }}
+        </h5>
+
+        {% if filename %}
+        <p class="text-center text-muted">📄 {{ filename }}</p>
+        {% endif %}
+
+        <!-- MATCHED -->
+        <div>
+            <div class="ats-section-title">✅ Matched Keywords</div>
+            {% if result.matched_keywords is iterable and result.matched_keywords|length > 0 %}
+            {% for word in result.matched_keywords %}
+            <span class="badge bg-success ats-badge">{{ word }}</span>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted">No matched keywords found</p>
+            {% endif %}
+        </div>
+
+        <!-- MISSING -->
+        <div>
+            <div class="ats-section-title">❌ Missing Keywords</div>
+            {% if result.missing_keywords is iterable and result.missing_keywords|length > 0 %}
+            {% for word in result.missing_keywords %}
+            <span class="badge bg-danger ats-badge">{{ word }}</span>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted">No missing keywords</p>
+            {% endif %}
+        </div>
+
+        <!-- STRENGTHS -->
+        <div>
+            <div class="ats-section-title">💪 Strengths</div>
+            {% if result.strengths is iterable and result.strengths|length > 0 %}
+            <ul>
+                {% for s in result.strengths %}
+                <li>{{ s }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No strengths identified</p>
+            {% endif %}
+        </div>
+
+        <!-- WEAKNESSES -->
+        <div>
+            <div class="ats-section-title">⚠️ Weaknesses</div>
+            {% if result.weaknesses is iterable and result.weaknesses|length > 0 %}
+            <ul>
+                {% for w in result.weaknesses %}
+                <li>{{ w }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No weaknesses identified</p>
+            {% endif %}
+        </div>
+
+        <!-- SUGGESTIONS -->
+        <div>
+            <div class="ats-section-title">🚀 Suggestions</div>
+            {% if result.suggestions is iterable and result.suggestions|length > 0 %}
+            <ul>
+                {% for s in result.suggestions %}
+                <li>{{ s }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No suggestions available</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>

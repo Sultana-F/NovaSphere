@@ -1,363 +1,413 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NOVASHPARE | Smart Placement Ecosystem</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}">
 </head>
 
 <body data-bs-spy="scroll" data-bs-target="#nav">
-
-<!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg navbar-light sticky-top" id="nav">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('home') }}">
-            <span class="logo-text">NOVA</span><span class="logo-accent">SHPARE</span><span class="logo-dot">.</span>
-        </a>
-
-        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navContent">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                <li class="nav-item ms-lg-4 mt-3 mt-lg-0">
-                    <a href="{{ url_for('loginpage') }}" class="btn btn-login">
-                        <i class="fas fa-sign-in-alt me-2"></i>Login Portal
-                    </a>
-                </li>
-            </ul>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="px-1">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4"
+            role="alert">
+            <i
+                class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+        {% endfor %}
     </div>
-</nav>
+    {% endif %}
+    {% endwith %}
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top" id="nav">
+        <div class="container">
 
-<!-- HERO -->
-<section id="home" class="hero">
-    <div class="container">
-        <div class="row align-items-center min-vh-100 g-5">
-            <div class="col-lg-6 hero-content">
-                <div class="badge-promo">
-                    <i class="fas fa-sparkles me-2"></i>AI-Powered Placement Hub
-                </div>
-
-                <h1 class="hero-title">
-                    Elevate Your Career <br>
-                    <span class="text-gradient">With Precision</span>
-                </h1>
-
-                <p class="hero-subtitle">
-                    A smart placement ecosystem that connects students, faculty, and recruiters through simple, efficient, and intelligent tools.
-                </p>
-
-                <div class="hero-actions">
-                    <a href="{{ url_for('loginpage') }}" class="btn btn-primary-main">
-                        Get Started Now <i class="fas fa-arrow-right ms-2"></i>
-                    </a>
-                    <a href="#" class="btn btn-outline-main">
-                        <i class="fas fa-play-circle me-2"></i>Watch Demo
-                    </a>
-                </div>
+            <div class="navbar-brand">
+                <span class="logo-text">NOVASPHERE</span>
             </div>
 
-           <div class="col-lg-6 hero-visual">
-                <div class="hero-image-container animate-float">
-                    <div class="hero-glow"></div>
-                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1000" class="hero-image" alt="Team Collaboration">
-                </div>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    <li class="nav-item ms-lg-4 mt-3 mt-lg-0">
+                        <a href="{{ url_for('loginpage') }}" class="btn btn-login">
+                            <i class="fas fa-user-lock me-2"></i>Login Portal
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 mt-3 mt-lg-0">
+                        <a href="{{ url_for('register') }}" class="btn btn-login">
+                            <i class="fas fa-id-badge me-2"></i>Register
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
-</section>
+    </nav>
 
-<!-- FEATURES / ROLES -->
-<section id="features" class="roles-section">
-    <div class="container">
-        <div class="section-header text-center">
-            <div class="badge-section">
-                <i class="fas fa-cubes me-2"></i>The Ecosystem
-            </div>
-            <h2 class="section-title">
-                Unified Role <span class="text-gradient">Management</span>
-            </h2>
-            <p class="section-subtitle">
-                Four roles working together for a smooth placement experience
-            </p>
-        </div>
+    <!-- HERO -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="row align-items-center min-vh-100 g-5">
+                <div class="col-lg-6 hero-content">
 
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="role-card">
-                    <div class="role-icon bg-slate">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <h4 class="role-title">Students</h4>
-                    <p class="role-description">Access job drives, track progress, and build professional CVs easily.</p>
-                    <div class="role-features">
-                        <span class="feature-tag">Resume Builder</span>
-                        <span class="feature-tag">Job Matching</span>
-                    </div>
-                </div>
-            </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="role-card">
-                    <div class="role-icon bg-teal">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <h4 class="role-title">TPO</h4>
-                    <p class="role-description">Manage drives, company invites, and announcements from one dashboard.</p>
-                    <div class="role-features">
-                        <span class="feature-tag">Drive Management</span>
-                        <span class="feature-tag">Analytics</span>
-                    </div>
-                </div>
-            </div>
+                    <h1 class="hero-title">
+                        Elevate Your Career <br>
+                        <span class="text-gradient">With Precision</span>
+                    </h1>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="role-card">
-                    <div class="role-icon bg-mint">
-                        <i class="fas fa-university"></i>
-                    </div>
-                    <h4 class="role-title">HOD</h4>
-                    <p class="role-description">Monitor department placement stats and student performance clearly.</p>
-                    <div class="role-features">
-                        <span class="feature-tag">Reports</span>
-                        <span class="feature-tag">Tracking</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="role-card">
-                    <div class="role-icon bg-dark-teal">
-                        <i class="fas fa-shield-halved"></i>
-                    </div>
-                    <h4 class="role-title">Admin</h4>
-                    <p class="role-description">Full system control, security management, and platform settings.</p>
-                    <div class="role-features">
-                        <span class="feature-tag">System Control</span>
-                        <span class="feature-tag">Security</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- CORE FEATURES -->
-<section class="core-features">
-    <div class="container">
-        <div class="section-header text-center">
-            <div class="badge-section">
-                <i class="fas fa-bolt me-2"></i>Powerful Features
-            </div>
-            <h2 class="section-title">
-                Smart Tools for <span class="text-gradient">Modern Hiring</span>
-            </h2>
-        </div>
-
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <h5 class="feature-title">AI Resume Builder</h5>
-                    <p class="feature-description">ATS-friendly templates with smart suggestions for better resumes.</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card featured">
-                    <div class="feature-icon">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <h5 class="feature-title">AI Job Matching</h5>
-                    <p class="feature-description">Match student skills with the right opportunities quickly and cleanly.</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <h5 class="feature-title">Smart Notifications</h5>
-                    <p class="feature-description">Get drive updates, interview calls, and results in one place.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- FAQ & CONTACT -->
-<section id="about" class="support-section">
-    <div class="container">
-        <div class="row g-5 align-items-center">
-            <div class="col-lg-6">
-                <div class="section-header">
-                    <div class="badge-section">
-                        <i class="fas fa-question-circle me-2"></i>Support Hub
-                    </div>
-                    <h2 class="section-title">
-                        Frequently Asked <span class="text-gradient">Questions</span>
-                    </h2>
-                </div>
-
-                <div class="accordion custom-accordion" id="faqAccordion">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#q1">
-                                <i class="fas fa-mobile-alt me-3"></i>Is the platform mobile responsive?
-                            </button>
-                        </h2>
-                        <div id="q1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Yes. The platform is fully responsive and works on mobile, tablet, and desktop.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q2">
-                                <i class="fas fa-shield-alt me-3"></i>How secure is my data?
-                            </button>
-                        </h2>
-                        <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Your data is handled with standard security practices and protected access control.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q3">
-                                <i class="fas fa-clock me-3"></i>How quickly can I get started?
-                            </button>
-                        </h2>
-                        <div id="q3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                You can get started right away by setting up your account and adding your details.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="contact-card">
-                    <div class="contact-header">
-                        <h3 class="contact-title">Get in Touch</h3>
-                        <p class="contact-subtitle">Have questions? We're here to help.</p>
-                    </div>
-
-                    <form class="contact-form">
-                        <div class="form-group">
-                            <input type="text" class="form-control" placeholder="Full Name" required>
-                            <i class="fas fa-user input-icon"></i>
-                        </div>
-
-                        <div class="form-group">
-                            <input type="email" class="form-control" placeholder="Email Address" required>
-                            <i class="fas fa-envelope input-icon"></i>
-                        </div>
-
-                        <div class="form-group">
-                            <textarea class="form-control" rows="4" placeholder="How can we help you?" required></textarea>
-                            <i class="fas fa-comment input-icon textarea-icon"></i>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary-main w-100">
-                            <i class="fas fa-paper-plane me-2"></i>Send Message
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="footer-brand">
-                    <a href="{{ url_for('home') }}" class="footer-logo">
-                        <span class="logo-text">NOVA</span><span class="logo-accent">SHPARE</span><span class="text-gradient">.</span>
-                    </a>
-                    <p class="footer-description">
-                        A clean and simple placement ecosystem for students, faculty, and recruiters.
+                    <p class="hero-subtitle">
+                        A smart placement ecosystem that connects students, faculty, and recruiters through simple,
+                        efficient, and intelligent tools.
                     </p>
-                    <div class="footer-social">
-                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+
+                    <div class="hero-actions">
+                        <a href="{{ url_for('loginpage') }}" class="btn btn-primary-main">
+                            Get Started Now <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-main">
+                            <i class="fas fa-play-circle me-2"></i>Watch Demo
+                        </a>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-lg-2 col-md-3 col-6">
-                <div class="footer-section">
-                    <h6 class="footer-title">Platform</h6>
-                    <ul class="footer-links">
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#">Pricing</a></li>
-                        <li><a href="#">API</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-lg-2 col-md-3 col-6">
-                <div class="footer-section">
-                    <h6 class="footer-title">Support</h6>
-                    <ul class="footer-links">
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <li><a href="#">Status</a></li>
-                        <li><a href="#">Privacy</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6">
-                <div class="footer-section">
-                    <h6 class="footer-title">Stay Updated</h6>
-                    <p class="footer-text">Get the latest updates on new features and placement opportunities.</p>
-                    <div class="newsletter">
-                        <input type="email" class="newsletter-input" placeholder="Enter your email">
-                        <button class="newsletter-btn"><i class="fas fa-arrow-right"></i></button>
+                <div class="col-lg-6 hero-visual">
+                    <div class="hero-image-container animate-float">
+                        <div class="hero-glow"></div>
+                        <img src="{{ url_for('static', filename='placement.jpeg') }}" class="hero-image"
+                            alt="Team Collaboration">
                     </div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <hr class="footer-divider">
+    <!-- FEATURES / ROLES -->
+    <section id="about" class="roles-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <div class="badge-section">
+                    <i class="fas fa-cubes me-2"></i>The Ecosystem
+                </div>
+                <h2 class="section-title">
+                    Unified Role <span class="text-gradient">Management</span>
+                </h2>
+                <p class="section-subtitle">
+                    Four roles working together for a smooth placement experience
+                </p>
+            </div>
 
-        <div class="footer-bottom">
-            <p class="copyright">&copy; 2024 NOVASHPARE Ecosystem. All Rights Reserved.</p>
-            <div class="footer-bottom-links">
-                <a href="#">Terms of Service</a>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Cookie Policy</a>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="role-card">
+                        <div class="role-icon bg-slate">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h4 class="role-title">Students</h4>
+                        <p class="role-description">Access job drives, track progress, and build professional CVs
+                            easily.</p>
+                        <div class="role-features">
+                            <span class="feature-tag">Resume Builder</span>
+                            <span class="feature-tag">Job Matching</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="role-card">
+                        <div class="role-icon bg-teal">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h4 class="role-title">TPO</h4>
+                        <p class="role-description">Manage drives, company invites, and announcements from one
+                            dashboard.</p>
+                        <div class="role-features">
+                            <span class="feature-tag">Drive Management</span>
+                            <span class="feature-tag">Analytics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <div class="role-card">
+                        <div class="role-icon bg-mint">
+                            <img src="{{ url_for('static', filename='hod.jpeg') }}" alt="HOD" class="role-img">
+                        </div>
+                        <h4 class="role-title">HOD</h4>
+                        <p class="role-description">Monitor department placement stats and student performance clearly.
+                        </p>
+                        <div class="role-features">
+                            <span class="feature-tag">Reports</span>
+                            <span class="feature-tag">Tracking</span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- ADMIN -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="role-card">
+                        <div class="role-icon bg-dark-teal">
+                            <img src="{{ url_for('static', filename='admin.jpeg') }}" alt="Admin" class="role-img">
+                        </div>
+                        <h4 class="role-title">Admin</h4>
+                        <p class="role-description">
+                            Full system control, security management, and platform settings.
+                        </p>
+                        <div class="role-features">
+                            <span class="feature-tag">System Control</span>
+                            <span class="feature-tag">Security</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+
+    <!-- CORE FEATURES -->
+    <section id="features" class="core-features">
+        <div class="container">
+            <div class="section-header text-center">
+                <div class="badge-section">
+                    <i class="fas fa-bolt me-2"></i>Powerful Features
+                </div>
+                <h2 class="section-title">
+                    Advanced Solutions for <span class="text-gradient">Placement Success</span>
+                </h2>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h5 class="feature-title">AI Resume Builder</h5>
+                        <p class="feature-description">ATS-friendly templates with smart suggestions for better resumes.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card featured">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h5 class="feature-title">Role-Based Access Control</h5>
+                        <p class="feature-description">Secure authentication using JWT with dedicated access for
+                            Students, HODs, TPOs, and the Principal.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <h5 class="feature-title">Smart Notifications</h5>
+                        <p class="feature-description">Get drive updates, interview calls, and results in one place.</p>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</footer>
+    </section>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FAQ SECTION -->
+    <section id="faq" class="support-section py-5">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <div class="badge-section">
+                    <i class="fas fa-question-circle me-2"></i>Support Hub
+                </div>
+                <h2 class="section-title">
+                    Frequently Asked <span class="text-gradient">Questions</span>
+                </h2>
+            </div>
+
+            <div class="accordion custom-accordion mx-auto" id="faqAccordion" style="max-width: 800px;">
+
+                <!-- Q1 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#q1">
+                            <i class="fas fa-mobile-screen-button me-3"></i>Is NovaSphere mobile responsive?
+                        </button>
+                    </h2>
+                    <div id="q1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Absolutely. NovaSphere is built on a responsive framework, ensuring students and recruiters
+                            can track placements seamlessly on mobile, tablet, and desktop devices.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#q2">
+                            <i class="fas fa-user-lock me-3"></i>How secure is student and institutional data?
+                        </button>
+                    </h2>
+                    <div id="q2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Your data is protected with modern security practices and access control.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#q3">
+                            <i class="fas fa-file-circle-check me-3"></i>Does the system automatically check my
+                            eligibility?
+                        </button>
+                    </h2>
+                    <div id="q3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes. When you apply for a drive, our automated verification engine instantly checks your
+                            CGPA and active backlogs against the recruiter's criteria to ensure only eligible candidates
+                            proceed.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <!--contact section -->
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="contact-section py-5">
+        <div class="container">
+            <div class="section-header text-center mb-5">
+                <h2 class="section-title">
+                    Get in <span class="text-gradient">Touch</span>
+                </h2>
+                <p class="contact-subtitle">Have questions? We're here to help.</p>
+            </div>
+
+            <div class="contact-card mx-auto" style="max-width: 600px;">
+                <form class="contact-form" action="{{url_for('contact')}}" method="POST">
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Full Name" required>
+                        <i class="fas fa-user input-icon"></i>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="email" class="form-control" placeholder="Email Address" required>
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+
+                    <div class="form-group">
+                        <textarea class="form-control" rows="4" placeholder="How can we help you?" required></textarea>
+                        <i class="fas fa-comment input-icon textarea-icon"></i>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-main w-100">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </button>
+
+                </form>
+
+
+            </div>
+        </div>
+    </section>
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="footer-brand">
+                        <div class="navbar-brand">
+                            <i class="fas fa-rocket logo-icon"></i>
+                            <span class="logo-text">NOVASPHERE</span>
+                        </div>
+                        <p class="footer-description">
+                            A clean and simple placement ecosystem for students, faculty, and recruiters.
+                        </p>
+                        <div class="footer-social">
+                            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    <div class="footer-section">
+                        <h6 class="footer-title">Platform</h6>
+                        <ul class="footer-links">
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#about">About</a></li>
+                            <li><a href="#">Pricing</a></li>
+                            <li><a href="#">API</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    <div class="footer-section">
+                        <h6 class="footer-title">Support</h6>
+                        <ul class="footer-links">
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="#">Contact</a></li>
+                            <li><a href="#">Status</a></li>
+                            <li><a href="#">Privacy</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-section">
+                        <h6 class="footer-title">Stay Updated</h6>
+                        <p class="footer-text">Get the latest updates on new features and placement opportunities.</p>
+                        <div class="newsletter">
+                            <input type="email" class="newsletter-input" placeholder="Enter your email">
+                            <button class="newsletter-btn"><i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="footer-divider">
+
+            <div class="footer-bottom">
+                <p class="copyright">&copy; 2024 NOVASHPARE Ecosystem. All Rights Reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% include 'chatbot.html' %}
 </body>
-</html>
 
+</html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,13 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Google Fonts (Poppins) -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
-        <link rel="stylesheet" href="login.css">
+
 
 </head>
+
 <body>
 
     <div class="container" id="container">
@@ -19,10 +22,21 @@
         <div class="form-box register">
             <form action="/login/admin" method="post">
                 <h1>Admin Login</h1>
-               
-                <span>use email for admin access</span>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <p style="color: red; font-size: 12px;">{{ message }}</p>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+                <label for="email">Email</label>
                 <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
+                <label for="password">Password</label>
+                <input type="password" name="password" placeholder="Password" required
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                    title="Minimum 8 characters, include letters and numbers">
                 <button type="submit">Sign In as Admin</button>
             </form>
         </div>
@@ -31,17 +45,20 @@
         <div class="form-box login">
             <form action="/login/student" method="post">
                 <h1>Student Login</h1>
-                <span> use your registration number</span>
                 <!-- Flash Messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                  {% if messages %}
-                    {% for category, message in messages %}
-                      <p style="color: red; font-size: 12px;">{{ message }}</p>
-                    {% endfor %}
-                  {% endif %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <p style="color: red; font-size: 12px;">{{ message }}</p>
+                {% endfor %}
+                {% endif %}
                 {% endwith %}
-                <input type="number" name="regno" placeholder="Registration Number" required>
-                <input type="password" name="password" placeholder="Password" required>
+                <label for="regno">Registration Number</label>
+                <input type="text" name="regno" placeholder="Registration Number" required>
+                <label for="password">Password</label>
+                <input type="password" name="password" placeholder="Password" required
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                    title="Minimum 8 characters, include letters and numbers">
                 <a href="{{ url_for('forgot_password') }}">Forgot Your Password?</a>
                 <button type="submit">Sign In as Student</button>
             </form>
@@ -78,4 +95,5 @@
         });
     </script>
 </body>
+
 </html>
